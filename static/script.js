@@ -181,7 +181,7 @@ function handleCanvasClick(e) {
     if (y >= -3 && y <= 5) {
         selectX(nearestX);
         document.querySelector(`[data-value="${nearestX}"]`).click();
-        document.getElementById('y-input').value = y.toFixed(2);
+        document.getElementById('y-input').value = y;
         validateY();
     }
 }
