@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Лабораторная работа №1</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div class="container">
+    <!-- Заголовок -->
+    <header class="header">
+        <h1>Лабораторная работа №1</h1>
+        <div class="student-info">
+            <span>ФИО: Пиляров Руслан Назирович</span>
+            <span>Группа: P3219</span>
+            <span>Вариант: 467088</span>
+        </div>
+    </header>
+
+    <!-- Основной контент -->
+    <main class="main-content">
+        <!-- Левая панель - параметры -->
+        <section class="parameters-panel">
+            <h2>Параметры точки</h2>
+
+            <form id="pointForm">
+                <!-- Координата X -->
+                <div class="input-group">
+                    <label>Координата X:</label>
+                    <div class="x-buttons">
+                        <button type="button" class="x-btn" data-value="-2">-2</button>
+                        <button type="button" class="x-btn" data-value="-1.5">-1.5</button>
+                        <button type="button" class="x-btn" data-value="-1">-1</button>
+                        <button type="button" class="x-btn" data-value="-0.5">-0.5</button>
+                        <button type="button" class="x-btn" data-value="0">0</button>
+                        <button type="button" class="x-btn" data-value="0.5">0.5</button>
+                        <button type="button" class="x-btn" data-value="1">1</button>
+                        <button type="button" class="x-btn" data-value="1.5">1.5</button>
+                        <button type="button" class="x-btn" data-value="2">2</button>
+                    </div>
+                    <input type="hidden" id="x-input" name="x" required>
+                </div>
+
+                <!-- Координата Y -->
+                <div class="input-group">
+                    <label for="y-input">Координата Y (от -3 до 5):</label>
+                    <input type="text" id="y-input" name="y" placeholder="2" required>
+                    <span class="error-message" id="y-error"></span>
+                </div>
+
+                <!-- Радиус R -->
+                <div class="input-group">
+                    <label>Радиус R:</label>
+                    <div class="r-options">
+                        <label class="radio-label">
+                            <input type="radio" name="r" value="1">
+                            <span class="radio-custom"></span>
+                            1
+                        </label>
+                        <label class="radio-label">
+                            <input type="radio" name="r" value="1.5">
+                            <span class="radio-custom"></span>
+                            1.5
+                        </label>
+                        <label class="radio-label">
+                            <input type="radio" name="r" value="2">
+                            <span class="radio-custom"></span>
+                            2
+                        </label>
+                        <label class="radio-label">
+                            <input type="radio" name="r" value="2.5">
+                            <span class="radio-custom"></span>
+                            2.5
+                        </label>
+                        <label class="radio-label">
+                            <input type="radio" name="r" value="3">
+                            <span class="radio-custom"></span>
+                            3
+                        </label>
+                    </div>
+                </div>
+
+                <button type="submit" class="submit-btn">Проверить</button>
+            </form>
+        </section>
+
+        <!-- Правая панель - график -->
+        <section class="graph-panel">
+            <h2>График области</h2>
+            <div class="canvas-container">
+                <canvas id="coordinatePlane" width="350" height="350"></canvas>
+            </div>
+            <div class="current-point" id="currentPoint">
+                X: -0.5 &nbsp;&nbsp;&nbsp; Y: 2 &nbsp;&nbsp;&nbsp; R: 1
+            </div>
+        </section>
+    </main>
+
+    <!-- Таблица результатов -->
+    <section class="results-section">
+        <div class="results-header">
+            <h2>История результатов</h2>
+            <div class="clear-buttons">
+                <button id="clearSelected" class="clear-btn clear-selected">Удалить выбранные</button>
+                <button id="clearAll" class="clear-btn clear-all">Очистить всё</button>
+            </div>
+        </div>
+        <div class="table-container">
+            <table class="results-table">
+                <thead>
+                <tr>
+                    <th><input type="checkbox" id="selectAll"></th>
+                    <th>X</th>
+                    <th>Y</th>
+                    <th>R</th>
+                    <th>Результат</th>
+                    <th>Время запроса</th>
+                    <th>Время выполнения</th>
+                </tr>
+                </thead>
+                <tbody id="resultsBody">
+                <!-- Результаты будут добавляться динамически -->
+                </tbody>
+            </table>
+        </div>
+    </section>
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>
