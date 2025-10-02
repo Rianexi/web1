@@ -2,8 +2,8 @@ let selectedX = null;
 let selectedR = null;
 
 document.addEventListener('DOMContentLoaded', function() {
-	initializeEventListeners();
-	drawCoordinatePlane();
+    initializeEventListeners();
+    drawCoordinatePlane();
 });
 
 function initializeEventListeners() {
@@ -20,11 +20,11 @@ function initializeEventListeners() {
 
     // Радио-кнопки R
     document.querySelectorAll('input[name="r"]').forEach(radio => {
-		radio.addEventListener('change', function() {
-			selectedR = parseFloat(this.value);
-			updateCurrentPoint();
-			drawCoordinatePlane();
-		});
+        radio.addEventListener('change', function() {
+            selectedR = parseFloat(this.value);
+            updateCurrentPoint();
+            drawCoordinatePlane();
+        });
     });
 
     // Поле Y
@@ -92,71 +92,66 @@ function updateCurrentPoint() {
 }
 
 function handleSubmit(e) {
-	e.preventDefault();
+    e.preventDefault();
 
-	const yInput = document.getElementById('y-input').value.trim();
+    const yInput = document.getElementById('y-input').value.trim();
 
-	if (selectedX === null) {
-		alert('Выберите X');
-		return;
-	}
-	// X может быть дробным (как раньше). Проверка диапазона выполняется на сервере.
-	if (!validateY()) {
-		alert('Введите корректное Y');
-		return;
-	}
-	if (!yInput) {
-		alert('Введите Y');
-		return;
-	}
-	if (selectedR === null) {
-		alert('Выберите R');
-		return;
-	}
+    if (selectedX === null) {
+        alert('Выберите X');
+        return;
+    }
+    // X может быть дробным (как раньше). Проверка диапазона выполняется на сервере.
+    if (!validateY() || !yInput) {
+        alert('Введите корректное Y');
+        return;
+    }
+    if (selectedR === null) {
+        alert('Выберите R');
+        return;
+    }
 
-	const url = `/calculate?x=${encodeURIComponent(selectedX)}&y=${encodeURIComponent(yInput)}&r=${encodeURIComponent(selectedR)}`;
-	const start = performance.now();
-	fetch(url, {
-		method: 'POST',
-		headers: {
-			'Accept': 'application/json'
-		}
-	}).then(async (res) => {
-		const durationMs = (performance.now() - start).toFixed(2);
-		let data;
-		try {
-			data = await res.json();
-		} catch (_) {
-			throw new Error('Некорректный ответ сервера');
-		}
+    const url = `/calculate?x=${encodeURIComponent(selectedX)}&y=${encodeURIComponent(yInput)}&r=${encodeURIComponent(selectedR)}`;
+    const start = performance.now();
+    fetch(url, {
+        method: 'POST',
+        headers: {
+            'Accept': 'application/json'
+        }
+    }).then(async (res) => {
+        const durationMs = (performance.now() - start).toFixed(2);
+        let data;
+        try {
+            data = await res.json();
+        } catch (_) {
+            throw new Error('Некорректный ответ сервера');
+        }
 
-		if (!res.ok) {
-			const reason = data && data.reason ? data.reason : `HTTP ${res.status}`;
-			throw new Error(reason);
-		}
+        if (!res.ok) {
+            const reason = data?.reason ? data.reason : `HTTP ${res.status}`;
+            throw new Error(reason);
+        }
 
-		addResultRow({
-			x: selectedX,
-			y: yInput,
-			r: selectedR,
-			hit: Boolean(data.result),
-			time: data.now || new Date().toLocaleString(),
-			duration: data.time ? `${data.time} ns` : `${durationMs} ms`
-		});
-		drawCoordinatePlane();
-	}).catch(err => {
-		alert(`Ошибка обращения к серверу: ${err.message}`);
-	});
+        addResultRow({
+            x: selectedX,
+            y: yInput,
+            r: selectedR,
+            hit: Boolean(data.result),
+            time: data.now || new Date().toLocaleString(),
+            duration: data.time ? `${data.time} ns` : `${durationMs} ms`
+        });
+        drawCoordinatePlane();
+    }).catch(err => {
+        alert(`Ошибка обращения к серверу: ${err.message}`);
+    });
 }
 
 // Упрощённая валидация только формата Y на клиенте (без вычислений попадания)
 function validateInputFormat(x, y, r) {
-	if (typeof x !== 'number' && isNaN(parseFloat(x))) return false;
-	if (typeof r !== 'number' && isNaN(parseFloat(r))) return false;
-	if (typeof y !== 'string' || !/^-?\d+(\.\d{1,10})?$/.test(y)) return false;
-	const numY = parseFloat(y);
-	if (isNaN(numY) || numY < -3 || numY > 5) return false;
-	return true;
+    if (typeof x !== 'number' && isNaN(parseFloat(x))) return false;
+    if (typeof r !== 'number' && isNaN(parseFloat(r))) return false;
+    if (typeof y !== 'string' || !/^-?\d+(\.\d{1,10})?$/.test(y)) return false;
+    const numY = parseFloat(y);
+    return !(isNaN(numY) || numY < -3 || numY > 5);
 }
 
 function handleCanvasClick(e) {
@@ -184,37 +179,36 @@ function handleCanvasClick(e) {
     );
 
     if (y >= -3 && y <= 5) {
-		selectX(nearestX);
-		const btn = document.querySelector(`[data-value="${nearestX}"]`);
-		if (btn) btn.classList.add('selected');
-		document.querySelectorAll('.x-btn').forEach(b => { if (b !== btn) b.classList.remove('selected'); });
+        selectX(nearestX);
+        const btn = document.querySelector(`[data-value="${nearestX}"]`);
+        if (btn) btn.classList.add('selected');
+        document.querySelectorAll('.x-btn').forEach(b => { if (b !== btn) b.classList.remove('selected'); });
 
-		const formattedY = y.toFixed(2);
-		document.getElementById('y-input').value = formattedY;
-		validateY();
+        document.getElementById('y-input').value = y.toFixed(2);
+        validateY();
     }
 }
 
 // НОВЫЕ ФУНКЦИИ ОЧИСТКИ
 function clearAllResults() {
-	if (confirm('Очистить таблицу результатов?')) {
-		document.getElementById('resultsBody').innerHTML = '';
-		drawCoordinatePlane();
-	}
+    if (confirm('Очистить таблицу результатов?')) {
+        document.getElementById('resultsBody').innerHTML = '';
+        drawCoordinatePlane();
+    }
 }
 
 function clearSelectedResults() {
-	const checkboxes = document.querySelectorAll('.result-checkbox:checked');
-	if (checkboxes.length === 0) {
-		alert('Выберите результаты для удаления!');
-		return;
-	}
-	if (confirm(`Удалить ${checkboxes.length} выбранных результатов?`)) {
-		checkboxes.forEach(checkbox => {
-			checkbox.closest('tr').remove();
-		});
-		drawCoordinatePlane();
-	}
+    const checkboxes = document.querySelectorAll('.result-checkbox:checked');
+    if (checkboxes.length === 0) {
+        alert('Выберите результаты для удаления!');
+        return;
+    }
+    if (confirm(`Удалить ${checkboxes.length} выбранных результатов?`)) {
+        checkboxes.forEach(checkbox => {
+            checkbox.closest('tr').remove();
+        });
+        drawCoordinatePlane();
+    }
 }
 
 function drawCoordinatePlane() {
@@ -306,9 +300,9 @@ function drawCoordinatePlane() {
 }
 
 function addResultRow(result) {
-	const tbody = document.getElementById('resultsBody');
-	const row = tbody.insertRow(0);
-	row.innerHTML = `
+    const tbody = document.getElementById('resultsBody');
+    const row = tbody.insertRow(0);
+    row.innerHTML = `
 		<td><input type="checkbox" class="result-checkbox"></td>
 		<td>${result.x}</td>
 		<td>${result.y}</td>
