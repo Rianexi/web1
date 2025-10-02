@@ -7,32 +7,54 @@ import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.LinkedHashMap;
+import java.util.LinkedList;
 import java.util.Map;
+import java.util.List;
 
 public class ResponseSender {
     private final Checker checker = new Checker();
     private final JsonParser parser = new JsonParser();
     private final SimpleDateFormat dateFormat = new SimpleDateFormat("dd.MM.yyyy HH:mm:ss");
+    // Простое хранение истории в памяти процесса FastCGI
+    private static final List<Map<String, Object>> HISTORY = new LinkedList<>();
+    private static final int HISTORY_LIMIT = 1000;
 
     public void sendResponse() {
         try {
-            long startTime = System.nanoTime();
-
-            // Проверка метода запроса
+            String uri = FCGIInterface.request.params.getProperty("REQUEST_URI");
             String method = FCGIInterface.request.params.getProperty("REQUEST_METHOD");
+            if (uri == null || uri.isEmpty()) {
+                // Fallback: определяем по PATH_INFO или SCRIPT_NAME
+                String pathInfo = FCGIInterface.request.params.getProperty("PATH_INFO");
+                String scriptName = FCGIInterface.request.params.getProperty("SCRIPT_NAME");
+                if (pathInfo != null && !pathInfo.isEmpty()) uri = pathInfo;
+                else if (scriptName != null && !scriptName.isEmpty()) uri = scriptName;
+                else uri = "/calculate"; // по умолчанию основной эндпоинт
+            }
+
+            if (uri.startsWith("/history")) {
+                // Отдаём историю GET-запросом
+                sendJsonList(HISTORY);
+                return;
+            }
+
+            if (!uri.startsWith("/calculate")) {
+                sendError("Unknown endpoint: " + uri);
+                return;
+            }
+
+            long startTime = System.nanoTime();
             if (method == null || !"POST".equalsIgnoreCase(method)) {
                 sendMethodNotAllowed("Only POST method is allowed. Received: " + method);
                 return;
             }
 
-            // Получение параметров из QUERY_STRING (ваш фронт отправляет как /calculate?x=1&y=2&r=3)
             String queryString = FCGIInterface.request.params.getProperty("QUERY_STRING");
             BigDecimal[] data = parser.parseUrlParams(queryString);
             BigDecimal x = data[0];
             BigDecimal y = data[1];
             BigDecimal r = data[2];
 
-            // Валидация на сервере
             try {
                 this.checker.validate(x, y, r);
             } catch (IllegalArgumentException e) {
@@ -45,12 +67,25 @@ public class ResponseSender {
             long scriptTimeNs = endTime - startTime;
             long scriptTimeMs = Math.max(0, scriptTimeNs / 1_000_000);
 
-            // Формат ответа под ваш фронтенд
+            Map<String, Object> item = new LinkedHashMap<>();
+            item.put("x", x);
+            item.put("y", y);
+            item.put("r", r);
+            item.put("result", hit);
+            item.put("now", dateFormat.format(new Date()));
+            item.put("timeMs", scriptTimeMs);
+
+            synchronized (HISTORY) {
+                HISTORY.add(0, item);
+                if (HISTORY.size() > HISTORY_LIMIT) {
+                    HISTORY.remove(HISTORY.size() - 1);
+                }
+            }
+
             Map<String, Object> response = new LinkedHashMap<>();
-            response.put("result", hit); // ваш фронт ждет data.result
-            response.put("now", dateFormat.format(new Date())); // ваш фронт ждет data.now
-            response.put("time", scriptTimeNs); // nanoseconds (для совместимости)
-            response.put("timeMs", scriptTimeMs); // миллисекунды для нормального отображения
+            response.putAll(item);
+            response.put("time", scriptTimeNs);
+            response.put("history", HISTORY);
 
             sendJson(response);
         } catch (IllegalArgumentException e) {
@@ -62,6 +97,28 @@ public class ResponseSender {
 
     private void sendJson(Map<String, Object> map) {
         String json = toJson(map);
+        String httpResponse = String.format(
+                "Status: 200 OK\r\nContent-Type: application/json\r\nAccess-Control-Allow-Origin: *\r\nContent-Length: %d\r\n\r\n%s",
+                json.getBytes(StandardCharsets.UTF_8).length, json
+        );
+        try {
+            System.out.write(httpResponse.getBytes(StandardCharsets.UTF_8));
+            System.out.flush();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void sendJsonList(List<Map<String, Object>> list) {
+        StringBuilder sb = new StringBuilder("[");
+        boolean first = true;
+        for (Map<String, Object> item : list) {
+            if (!first) sb.append(",");
+            first = false;
+            sb.append(toJson(item));
+        }
+        sb.append("]");
+        String json = sb.toString();
         String httpResponse = String.format(
                 "Status: 200 OK\r\nContent-Type: application/json\r\nAccess-Control-Allow-Origin: *\r\nContent-Length: %d\r\n\r\n%s",
                 json.getBytes(StandardCharsets.UTF_8).length, json
@@ -122,17 +179,38 @@ public class ResponseSender {
         for (Map.Entry<String, Object> entry : map.entrySet()) {
             if (!first) sb.append(",");
             first = false;
-
             sb.append("\"").append(escapeJson(entry.getKey())).append("\":");
-            Object val = entry.getValue();
-            if (val instanceof String) {
-                sb.append("\"").append(escapeJson((String)val)).append("\"");
-            } else {
-                sb.append(val);
-            }
+            sb.append(toJsonValue(entry.getValue()));
         }
         sb.append("}");
         return sb.toString();
+    }
+
+    private String toJsonValue(Object value) {
+        if (value == null) return "null";
+        if (value instanceof String) {
+            return "\"" + escapeJson((String) value) + "\"";
+        }
+        if (value instanceof Number || value instanceof Boolean) {
+            return String.valueOf(value);
+        }
+        if (value instanceof Map) {
+            @SuppressWarnings("unchecked")
+            Map<String, Object> m = (Map<String, Object>) value;
+            return toJson(m);
+        }
+        if (value instanceof Iterable) {
+            StringBuilder arr = new StringBuilder("[");
+            boolean first = true;
+            for (Object item : (Iterable<?>) value) {
+                if (!first) arr.append(",");
+                first = false;
+                arr.append(toJsonValue(item));
+            }
+            arr.append("]");
+            return arr.toString();
+        }
+        return "\"" + escapeJson(String.valueOf(value)) + "\"";
     }
 
     private String escapeJson(String str) {

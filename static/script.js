@@ -4,6 +4,22 @@ let selectedR = null;
 document.addEventListener('DOMContentLoaded', function() {
     initializeEventListeners();
     drawCoordinatePlane();
+    // Подгружаем историю с сервера при загрузке
+    fetch('/history', { headers: { 'Accept': 'application/json' } })
+        .then(r => r.json())
+        .then(items => {
+            if (Array.isArray(items)) {
+                items.forEach(item => addResultRow({
+                    x: item.x,
+                    y: String(item.y),
+                    r: item.r,
+                    hit: Boolean(item.result),
+                    time: item.now,
+                    duration: (typeof item.timeMs === 'number') ? `${item.timeMs} ms` : ''
+                }));
+            }
+        })
+        .catch(() => {});
 });
 
 function initializeEventListeners() {
@@ -93,19 +109,10 @@ function handleSubmit(e) {
 
     const yInput = document.getElementById('y-input').value.trim();
 
-    if (selectedX === null) {
-        alert('Выберите X');
-        return;
-    }
+    if (selectedX === null) return showToast('Выберите X');
     // X может быть дробным (как раньше). Проверка диапазона выполняется на сервере.
-    if (!validateY() || !yInput) {
-        alert('Введите корректное Y');
-        return;
-    }
-    if (selectedR === null) {
-        alert('Выберите R');
-        return;
-    }
+    if (!validateY() || !yInput) return showToast('Введите корректное Y');
+    if (selectedR === null) return showToast('Выберите R');
 
     const url = `/calculate?x=${encodeURIComponent(selectedX)}&y=${encodeURIComponent(yInput)}&r=${encodeURIComponent(selectedR)}`;
     const start = performance.now();
@@ -137,9 +144,7 @@ function handleSubmit(e) {
             duration: (typeof data.timeMs === 'number') ? `${data.timeMs} ms` : (data.time ? `${data.time} ns` : `${durationMs} ms`)
         });
         drawCoordinatePlane();
-    }).catch(err => {
-        alert(`Ошибка обращения к серверу: ${err.message}`);
-    });
+    }).catch(err => showToast(`Ошибка: ${err.message}`));
 }
 
 // Упрощённая валидация только формата Y на клиенте (без вычислений попадания)
@@ -197,7 +202,7 @@ function clearAllResults() {
 function clearSelectedResults() {
     const checkboxes = document.querySelectorAll('.result-checkbox:checked');
     if (checkboxes.length === 0) {
-        alert('Выберите результаты для удаления!');
+        showToast('Выберите результаты для удаления!');
         return;
     }
     if (confirm(`Удалить ${checkboxes.length} выбранных результатов?`)) {
@@ -308,4 +313,22 @@ function addResultRow(result) {
 		<td title="${result.time}">${result.time}</td>
 		<td title="${result.duration}">${result.duration}</td>
 	`;
+}
+
+// Простые toast-уведомления вместо alert
+let toastTimer = null;
+function showToast(message) {
+    let el = document.getElementById('app-toast');
+    if (!el) {
+        el = document.createElement('div');
+        el.id = 'app-toast';
+        el.className = 'toast';
+        document.body.appendChild(el);
+    }
+    el.textContent = message;
+    el.title = message;
+    el.classList.add('show');
+    if (toastTimer) clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => el.classList.remove('show'), 2500);
+    return false;
 }
