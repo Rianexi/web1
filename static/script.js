@@ -1,11 +1,9 @@
 let selectedX = null;
 let selectedR = null;
-let results = []; // <- ЗДЕСЬ хранятся данные в оперативной памяти
 
 document.addEventListener('DOMContentLoaded', function() {
-    initializeEventListeners();
-    drawCoordinatePlane();
-    loadResults(); // Загружаем из localStorage при старте
+	initializeEventListeners();
+	drawCoordinatePlane();
 });
 
 function initializeEventListeners() {
@@ -22,11 +20,11 @@ function initializeEventListeners() {
 
     // Радио-кнопки R
     document.querySelectorAll('input[name="r"]').forEach(radio => {
-        radio.addEventListener('change', function() {
-            selectedR = parseFloat(this.value);
-            updateCurrentPoint();
-            drawCoordinatePlane();
-        });
+		radio.addEventListener('change', function() {
+			selectedR = parseFloat(this.value);
+			updateCurrentPoint();
+			drawCoordinatePlane();
+		});
     });
 
     // Поле Y
@@ -38,9 +36,11 @@ function initializeEventListeners() {
     // Клик по canvas
     document.getElementById('coordinatePlane').addEventListener('click', handleCanvasClick);
 
-    // НОВЫЕ кнопки очистки
-    document.getElementById('clearAll').addEventListener('click', clearAllResults);
-    document.getElementById('clearSelected').addEventListener('click', clearSelectedResults);
+    // Кнопки очистки таблицы (без сохранения состояния на клиенте)
+    const clearAllBtn = document.getElementById('clearAll');
+    if (clearAllBtn) clearAllBtn.addEventListener('click', clearAllResults);
+    const clearSelectedBtn = document.getElementById('clearSelected');
+    if (clearSelectedBtn) clearSelectedBtn.addEventListener('click', clearSelectedResults);
 }
 
 function selectX(value) {
@@ -54,16 +54,26 @@ function validateY() {
     const error = document.getElementById('y-error');
     const value = input.value.trim();
 
+    // Пустое значение
     if (value === '') {
         error.textContent = '';
         return true;
     }
 
+    // Проверка на допустимые символы
     if (!/^-?\d*\.?\d*$/.test(value)) {
         error.textContent = 'Только числа';
         return false;
     }
 
+    // Проверка на слишком длинное десятичное значение (более 10 знаков после точки)
+    const parts = value.split('.');
+    if (parts.length > 1 && parts[1].length > 10) {
+        error.textContent = 'Максимум 10 знаков после запятой';
+        return false;
+    }
+
+    // Проверка на попадание в диапазон
     const num = parseFloat(value);
     if (isNaN(num) || num < -3 || num > 5) {
         error.textContent = 'От -3 до 5';
@@ -82,76 +92,71 @@ function updateCurrentPoint() {
 }
 
 function handleSubmit(e) {
-    e.preventDefault();
+	e.preventDefault();
 
-    const y = parseFloat(document.getElementById('y-input').value);
+	const yInput = document.getElementById('y-input').value.trim();
 
-    if (!selectedX) {
-        alert('Выберите X');
-        return;
-    }
-    if (!validateY() || !y) {
-        alert('Введите корректное Y');
-        return;
-    }
-    if (!selectedR) {
-        alert('Выберите R');
-        return;
-    }
+	if (selectedX === null) {
+		alert('Выберите X');
+		return;
+	}
+	// X может быть дробным (как раньше). Проверка диапазона выполняется на сервере.
+	if (!validateY()) {
+		alert('Введите корректное Y');
+		return;
+	}
+	if (!yInput) {
+		alert('Введите Y');
+		return;
+	}
+	if (selectedR === null) {
+		alert('Выберите R');
+		return;
+	}
 
-    sendRequest(selectedX, y, selectedR);
+	const url = `/calculate?x=${encodeURIComponent(selectedX)}&y=${encodeURIComponent(yInput)}&r=${encodeURIComponent(selectedR)}`;
+	const start = performance.now();
+	fetch(url, {
+		method: 'POST',
+		headers: {
+			'Accept': 'application/json'
+		}
+	}).then(async (res) => {
+		const durationMs = (performance.now() - start).toFixed(2);
+		let data;
+		try {
+			data = await res.json();
+		} catch (_) {
+			throw new Error('Некорректный ответ сервера');
+		}
+
+		if (!res.ok) {
+			const reason = data && data.reason ? data.reason : `HTTP ${res.status}`;
+			throw new Error(reason);
+		}
+
+		addResultRow({
+			x: selectedX,
+			y: yInput,
+			r: selectedR,
+			hit: Boolean(data.result),
+			time: data.now || new Date().toLocaleString(),
+			duration: data.time ? `${data.time} ns` : `${durationMs} ms`
+		});
+		drawCoordinatePlane();
+	}).catch(err => {
+		alert(`Ошибка обращения к серверу: ${err.message}`);
+	});
 }
 
-function sendRequest(x, y, r) {
-    const startTime = performance.now();
-
-    // Имитация AJAX запроса (замените на реальный)
-    setTimeout(() => {
-        const hit = checkHit(x, y, r);
-        const endTime = performance.now();
-
-        addResult({
-            x, y, r, hit,
-            time: new Date().toLocaleString(),
-            duration: `${(endTime - startTime).toFixed(2)} мс`,
-            id: Date.now() // Добавляем уникальный ID для каждой точки
-        });
-    }, 100);
-}
-
-function checkHit(x, y, r) {
-    // Прямоугольник (1-я четверть)
-    if (x >= 0 && y >= 0 && x <= r/2 && y <= r) return true;
-
-    // Треугольник (4-я четверть)
-    if (x >= 0 && y <= 0 && x <= r && y >= -r && y >= x - r) return true;
-
-    // Четверть круга (2-я четверть)
-    if (x <= 0 && y >= 0 && (x*x + y*y <= (r/2)*(r/2))) return true;
-
-    return false;
-}
-
-function addResult(result) {
-    results.unshift(result); // Добавляем в начало массива
-    saveResults(); // Сохраняем в localStorage
-
-    const tbody = document.getElementById('resultsBody');
-    const row = tbody.insertRow(0);
-
-    row.innerHTML = `
-        <td><input type="checkbox" class="result-checkbox" data-id="${result.id}"></td>
-        <td>${result.x}</td>
-        <td>${result.y}</td>
-        <td>${result.r}</td>
-        <td style="color: ${result.hit ? '#4caf50' : '#f44336'}; font-weight: bold">
-            ${result.hit ? 'Попадание' : 'Промах'}
-        </td>
-        <td>${result.time}</td>
-        <td>${result.duration}</td>
-    `;
-
-    drawCoordinatePlane();
+// Упрощённая валидация только формата Y на клиенте (без вычислений попадания)
+function validateInputFormat(x, y, r) {
+	if (typeof x !== 'number' && isNaN(parseFloat(x))) return false;
+	if (typeof r !== 'number' && isNaN(parseFloat(r))) return false;
+	if (typeof y !== 'string' || !/^-?\d+(\.\d{1,10})?$/.test(y)) return false;
+	const numY = parseFloat(y);
+	if (isNaN(numY) || numY < -3 || numY > 5) return false;
+	return true;
 }
 
 function handleCanvasClick(e) {
@@ -172,59 +177,44 @@ function handleCanvasClick(e) {
     const x = (clickX - centerX) / scale;
     const y = (centerY - clickY) / scale;
 
-    // Найти ближайшее допустимое X
+    // Найти ближайшее допустимое X (шаг 0.5 как было раньше)
     const validX = [-2, -1.5, -1, -0.5, 0, 0.5, 1, 1.5, 2];
     const nearestX = validX.reduce((prev, curr) =>
         Math.abs(curr - x) < Math.abs(prev - x) ? curr : prev
     );
 
     if (y >= -3 && y <= 5) {
-        selectX(nearestX);
-        document.querySelector(`[data-value="${nearestX}"]`).click();
-        document.getElementById('y-input').value = y.toFixed(2);
-        validateY();
+		selectX(nearestX);
+		const btn = document.querySelector(`[data-value="${nearestX}"]`);
+		if (btn) btn.classList.add('selected');
+		document.querySelectorAll('.x-btn').forEach(b => { if (b !== btn) b.classList.remove('selected'); });
+
+		const formattedY = y.toFixed(2);
+		document.getElementById('y-input').value = formattedY;
+		validateY();
     }
 }
 
 // НОВЫЕ ФУНКЦИИ ОЧИСТКИ
 function clearAllResults() {
-    if (confirm('Вы уверены, что хотите удалить ВСЕ результаты?')) {
-        results = []; // Очищаем массив
-        localStorage.removeItem('labResults'); // Удаляем из localStorage
-        document.getElementById('resultsBody').innerHTML = ''; // Очищаем таблицу
-        drawCoordinatePlane(); // Перерисовываем график
-
-        alert('Все результаты удалены!');
-    }
+	if (confirm('Очистить таблицу результатов?')) {
+		document.getElementById('resultsBody').innerHTML = '';
+		drawCoordinatePlane();
+	}
 }
 
 function clearSelectedResults() {
-    const checkboxes = document.querySelectorAll('.result-checkbox:checked');
-
-    if (checkboxes.length === 0) {
-        alert('Выберите результаты для удаления!');
-        return;
-    }
-
-    if (confirm(`Удалить ${checkboxes.length} выбранных результатов?`)) {
-        const idsToDelete = Array.from(checkboxes).map(cb => parseInt(cb.dataset.id));
-
-        // Удаляем из массива results
-        results = results.filter(result => !idsToDelete.includes(result.id));
-
-        // Сохраняем обновленный массив
-        saveResults();
-
-        // Удаляем строки из таблицы
-        checkboxes.forEach(checkbox => {
-            checkbox.closest('tr').remove();
-        });
-
-        // Перерисовываем график
-        drawCoordinatePlane();
-
-        alert(`Удалено ${checkboxes.length} результатов!`);
-    }
+	const checkboxes = document.querySelectorAll('.result-checkbox:checked');
+	if (checkboxes.length === 0) {
+		alert('Выберите результаты для удаления!');
+		return;
+	}
+	if (confirm(`Удалить ${checkboxes.length} выбранных результатов?`)) {
+		checkboxes.forEach(checkbox => {
+			checkbox.closest('tr').remove();
+		});
+		drawCoordinatePlane();
+	}
 }
 
 function drawCoordinatePlane() {
@@ -312,47 +302,19 @@ function drawCoordinatePlane() {
         }
     }
 
-    // Точки результатов
-    results.forEach(result => {
-        if (result.r === selectedR) {
-            const x = centerX + result.x * scale;
-            const y = centerY - result.y * scale;
-
-            ctx.fillStyle = result.hit ? '#4caf50' : '#f44336';
-            ctx.beginPath();
-            ctx.arc(x, y, 4, 0, 2 * Math.PI);
-            ctx.fill();
-        }
-    });
+    // Точки результатов убраны с клиента, т.к. вычисления делает сервер
 }
 
-function saveResults() {
-    // ЗДЕСЬ данные сохраняются в localStorage браузера
-    localStorage.setItem('labResults', JSON.stringify(results));
-}
-
-function loadResults() {
-    // ЗДЕСЬ данные загружаются из localStorage
-    const saved = localStorage.getItem('labResults');
-    if (saved) {
-        results = JSON.parse(saved);
-        results.forEach(result => addResultToTable(result));
-    }
-}
-
-function addResultToTable(result) {
-    const tbody = document.getElementById('resultsBody');
-    const row = tbody.insertRow();
-
-    row.innerHTML = `
-        <td><input type="checkbox" class="result-checkbox" data-id="${result.id || Date.now()}"></td>
-        <td>${result.x}</td>
-        <td>${result.y}</td>
-        <td>${result.r}</td>
-        <td style="color: ${result.hit ? '#4caf50' : '#f44336'}; font-weight: bold">
-            ${result.hit ? 'Попадание' : 'Промах'}
-        </td>
-        <td>${result.time}</td>
-        <td>${result.duration}</td>
-    `;
+function addResultRow(result) {
+	const tbody = document.getElementById('resultsBody');
+	const row = tbody.insertRow(0);
+	row.innerHTML = `
+		<td><input type="checkbox" class="result-checkbox"></td>
+		<td>${result.x}</td>
+		<td>${result.y}</td>
+		<td>${result.r}</td>
+		<td style="color: ${result.hit ? '#4caf50' : '#f44336'}; font-weight: bold">${result.hit ? 'Попадание' : 'Промах'}</td>
+		<td>${result.time}</td>
+		<td>${result.duration}</td>
+	`;
 }

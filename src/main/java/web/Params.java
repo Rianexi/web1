@@ -8,7 +8,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 class Params {
-    private final int x;
+    private final float x;
     private final float y;
     private final float r;
 
@@ -18,7 +18,7 @@ class Params {
         }
         var params = splitQuery(query);
         validateParams(params);
-        this.x = Integer.parseInt(params.get("x"));
+        this.x = Float.parseFloat(params.get("x"));
         this.y = Float.parseFloat(params.get("y"));
         this.r = Float.parseFloat(params.get("r"));
     }
@@ -43,9 +43,14 @@ class Params {
             throw new ValidationException("x is invalid");
         }
 
+        // Разрешаем дробный X до 6 знаков после точки
+        if (!x.matches("^-?\\d+(?:\\.\\d{1,6})?$")) {
+            throw new ValidationException("x has too many decimal places");
+        }
+
         try {
-            var xx = Integer.parseInt(x);
-            if (xx < -3 || xx > 5) {
+            var xx = Float.parseFloat(x);
+            if (xx < -2 || xx > 2) {
                 throw new ValidationException("x has forbidden value");
             }
         } catch (NumberFormatException e) {
@@ -55,6 +60,11 @@ class Params {
         var y = params.get("y");
         if (y == null || y.isEmpty()) {
             throw new ValidationException("y is invalid");
+        }
+
+        // Разрешаем максимум 6 знаков после точки (без экспоненциальной записи)
+        if (!y.matches("^-?\\d+(?:\\.\\d{1,6})?$")) {
+            throw new ValidationException("y has too many decimal places");
         }
 
         try {
@@ -71,6 +81,11 @@ class Params {
             throw new ValidationException("r is invalid");
         }
 
+        // Для r тоже ограничим до 6 знаков после точки
+        if (!r.matches("^-?\\d+(?:\\.\\d{1,6})?$")) {
+            throw new ValidationException("r has too many decimal places");
+        }
+
         try {
             var rr = Float.parseFloat(r);
             if (rr < 1 || rr > 3) {
@@ -82,7 +97,7 @@ class Params {
     }
 
 
-    public int getX() {
+    public float getX() {
         return x;
     }
 
