@@ -11,7 +11,7 @@ document.addEventListener('DOMContentLoaded', function() {
             if (Array.isArray(items)) {
                 items.forEach(item => addResultRow({
                     x: item.x,
-                    y: String(item.y),
+                    y: String(item.y), // Сохраняем точное значение как строку
                     r: item.r,
                     hit: Boolean(item.result),
                     time: item.now,

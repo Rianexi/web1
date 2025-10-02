@@ -104,7 +104,7 @@ public class ResponseSender {
 
             Map<String, Object> item = new LinkedHashMap<>();
             item.put("x", x);
-            item.put("y", y);
+            item.put("y", y.toString()); // Сохраняем как строку для точности
             item.put("r", r);
             item.put("result", hit);
             item.put("now", dateFormat.format(new Date()));
