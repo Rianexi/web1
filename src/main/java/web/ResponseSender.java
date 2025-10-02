@@ -50,6 +50,41 @@ public class ResponseSender {
             }
 
             String queryString = FCGIInterface.request.params.getProperty("QUERY_STRING");
+            
+            // Проверяем, не запрос ли на очистку истории
+            if (queryString != null && queryString.contains("clear=true")) {
+                synchronized (HISTORY) {
+                    HISTORY.clear();
+                }
+                sendJson(Map.of("success", true));
+                return;
+            }
+            
+            // Проверяем, не запрос ли на выборочное удаление
+            if (queryString != null && queryString.contains("clearSelected=")) {
+                String clearSelected = queryString.substring(queryString.indexOf("clearSelected=") + 14);
+                if (clearSelected.contains("&")) {
+                    clearSelected = clearSelected.substring(0, clearSelected.indexOf("&"));
+                }
+                
+                synchronized (HISTORY) {
+                    String[] indices = clearSelected.split(",");
+                    // Удаляем в обратном порядке, чтобы индексы не сбились
+                    for (int i = indices.length - 1; i >= 0; i--) {
+                        try {
+                            int index = Integer.parseInt(indices[i].trim());
+                            if (index >= 0 && index < HISTORY.size()) {
+                                HISTORY.remove(index);
+                            }
+                        } catch (NumberFormatException e) {
+                            // Игнорируем некорректные индексы
+                        }
+                    }
+                }
+                sendJson(Map.of("success", true));
+                return;
+            }
+            
             BigDecimal[] data = parser.parseUrlParams(queryString);
             BigDecimal x = data[0];
             BigDecimal y = data[1];

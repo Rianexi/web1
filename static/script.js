@@ -193,10 +193,20 @@ function handleCanvasClick(e) {
 
 // НОВЫЕ ФУНКЦИИ ОЧИСТКИ
 function clearAllResults() {
-    if (confirm('Очистить таблицу результатов?')) {
-        document.getElementById('resultsBody').innerHTML = '';
-        drawCoordinatePlane();
-    }
+    showConfirmDialog('Очистить таблицу результатов?', () => {
+        // Очищаем на сервере через /calculate с параметром clear=true
+        fetch('/calculate?clear=true', { method: 'POST' })
+            .then(() => {
+                // Очищаем на клиенте
+                document.getElementById('resultsBody').innerHTML = '';
+                drawCoordinatePlane();
+            })
+            .catch(() => {
+                // Если сервер недоступен, очищаем только на клиенте
+                document.getElementById('resultsBody').innerHTML = '';
+                drawCoordinatePlane();
+            });
+    });
 }
 
 function clearSelectedResults() {
@@ -205,12 +215,32 @@ function clearSelectedResults() {
         showToast('Выберите результаты для удаления!');
         return;
     }
-    if (confirm(`Удалить ${checkboxes.length} выбранных результатов?`)) {
+    showConfirmDialog(`Удалить ${checkboxes.length} выбранных результатов?`, () => {
+        // Собираем ID выбранных строк для удаления на сервере
+        const selectedIds = [];
         checkboxes.forEach(checkbox => {
-            checkbox.closest('tr').remove();
+            const row = checkbox.closest('tr');
+            const rowIndex = Array.from(row.parentNode.children).indexOf(row);
+            selectedIds.push(rowIndex);
         });
-        drawCoordinatePlane();
-    }
+        
+        // Отправляем запрос на сервер для удаления выбранных записей
+        fetch(`/calculate?clearSelected=${selectedIds.join(',')}`, { method: 'POST' })
+            .then(() => {
+                // Удаляем на клиенте
+                checkboxes.forEach(checkbox => {
+                    checkbox.closest('tr').remove();
+                });
+                drawCoordinatePlane();
+            })
+            .catch(() => {
+                // Если сервер недоступен, удаляем только на клиенте
+                checkboxes.forEach(checkbox => {
+                    checkbox.closest('tr').remove();
+                });
+                drawCoordinatePlane();
+            });
+    });
 }
 
 function drawCoordinatePlane() {
@@ -331,4 +361,50 @@ function showToast(message) {
     if (toastTimer) clearTimeout(toastTimer);
     toastTimer = setTimeout(() => el.classList.remove('show'), 2500);
     return false;
+}
+
+// Красивое диалоговое окно подтверждения
+function showConfirmDialog(message, onConfirm) {
+    // Создаем overlay
+    const overlay = document.createElement('div');
+    overlay.className = 'confirm-overlay';
+    
+    // Создаем диалог
+    const dialog = document.createElement('div');
+    dialog.className = 'confirm-dialog';
+    
+    dialog.innerHTML = `
+        <div class="confirm-content">
+            <div class="confirm-icon">⚠️</div>
+            <div class="confirm-message">${message}</div>
+            <div class="confirm-buttons">
+                <button class="confirm-btn confirm-cancel">Отмена</button>
+                <button class="confirm-btn confirm-ok">OK</button>
+            </div>
+        </div>
+    `;
+    
+    overlay.appendChild(dialog);
+    document.body.appendChild(overlay);
+    
+    // Обработчики событий
+    const cancelBtn = dialog.querySelector('.confirm-cancel');
+    const okBtn = dialog.querySelector('.confirm-ok');
+    
+    const close = () => {
+        document.body.removeChild(overlay);
+    };
+    
+    cancelBtn.addEventListener('click', close);
+    okBtn.addEventListener('click', () => {
+        close();
+        onConfirm();
+    });
+    
+    overlay.addEventListener('click', (e) => {
+        if (e.target === overlay) close();
+    });
+    
+    // Фокус на кнопке отмены
+    cancelBtn.focus();
 }
