@@ -137,7 +137,7 @@ function handleSubmit(e) {
             r: selectedR,
             hit: Boolean(data.result),
             time: data.now || new Date().toLocaleString(),
-            duration: data.time ? `${data.time} ns` : `${durationMs} ms`
+            duration: (typeof data.timeMs === 'number') ? `${data.timeMs} ms` : (data.time ? `${data.time} ns` : `${durationMs} ms`)
         });
         drawCoordinatePlane();
     }).catch(err => {
