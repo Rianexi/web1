@@ -237,6 +237,9 @@ body {
     background: rgba(92, 107, 192, 0.1);
     border-radius: 8px;
     font-size: 0.9em;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 /* Секция результатов */
@@ -268,6 +271,7 @@ body {
     border-collapse: collapse;
     background: white;
     font-size: 0.9em;
+    table-layout: fixed;
 }
 
 .results-table th {
@@ -277,13 +281,25 @@ body {
     text-align: center;
     font-weight: 700;
     font-family: serif;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .results-table td {
     padding: 12px;
     text-align: center;
     border-bottom: 1px solid #e0e0e0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
+
+/* Узкие колонки для чекбокса и результата, остальные делятся поровну */
+.results-table th:nth-child(1),
+.results-table td:nth-child(1) { width: 40px; }
+.results-table th:nth-child(5),
+.results-table td:nth-child(5) { width: 120px; }
 
 .results-table tbody tr:hover {
     background-color: rgba(92, 107, 192, 0.05);

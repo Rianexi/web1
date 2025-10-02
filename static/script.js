@@ -66,12 +66,7 @@ function validateY() {
         return false;
     }
 
-    // Проверка на слишком длинное десятичное значение (более 10 знаков после точки)
-    const parts = value.split('.');
-    if (parts.length > 1 && parts[1].length > 10) {
-        error.textContent = 'Максимум 10 знаков после запятой';
-        return false;
-    }
+    // Без ограничения на количество знаков после точки
 
     // Проверка на попадание в диапазон
     const num = parseFloat(value);
@@ -88,7 +83,9 @@ function validateY() {
 function updateCurrentPoint() {
     const y = document.getElementById('y-input').value;
     const pointDisplay = document.getElementById('currentPoint');
-    pointDisplay.textContent = `X: ${selectedX || '-'} \u00A0\u00A0\u00A0 Y: ${y || '-'} \u00A0\u00A0\u00A0 R: ${selectedR || '-'}`;
+    const text = `X: ${selectedX || '-'}   Y: ${y || '-'}   R: ${selectedR || '-'}`;
+    pointDisplay.textContent = text;
+    pointDisplay.title = text; // полный текст в подсказке
 }
 
 function handleSubmit(e) {
@@ -149,7 +146,7 @@ function handleSubmit(e) {
 function validateInputFormat(x, y, r) {
     if (typeof x !== 'number' && isNaN(parseFloat(x))) return false;
     if (typeof r !== 'number' && isNaN(parseFloat(r))) return false;
-    if (typeof y !== 'string' || !/^-?\d+(\.\d{1,10})?$/.test(y)) return false;
+    if (typeof y !== 'string' || !/^-?\d+(\.\d+)?$/.test(y)) return false;
     const numY = parseFloat(y);
     return !(isNaN(numY) || numY < -3 || numY > 5);
 }
@@ -184,7 +181,7 @@ function handleCanvasClick(e) {
         if (btn) btn.classList.add('selected');
         document.querySelectorAll('.x-btn').forEach(b => { if (b !== btn) b.classList.remove('selected'); });
 
-        document.getElementById('y-input').value = y.toFixed(2);
+        document.getElementById('y-input').value = y.toString();
         validateY();
     }
 }
@@ -304,11 +301,11 @@ function addResultRow(result) {
     const row = tbody.insertRow(0);
     row.innerHTML = `
 		<td><input type="checkbox" class="result-checkbox"></td>
-		<td>${result.x}</td>
-		<td>${result.y}</td>
-		<td>${result.r}</td>
+		<td title="${result.x}">${result.x}</td>
+		<td title="${result.y}">${result.y}</td>
+		<td title="${result.r}">${result.r}</td>
 		<td style="color: ${result.hit ? '#4caf50' : '#f44336'}; font-weight: bold">${result.hit ? 'Попадание' : 'Промах'}</td>
-		<td>${result.time}</td>
-		<td>${result.duration}</td>
+		<td title="${result.time}">${result.time}</td>
+		<td title="${result.duration}">${result.duration}</td>
 	`;
 }
