@@ -4,8 +4,8 @@ let selectedR = null;
 document.addEventListener('DOMContentLoaded', function() {
     initializeEventListeners();
     drawCoordinatePlane();
-    // Подгружаем историю с сервера при загрузке
-    fetch('/history', { headers: { 'Accept': 'application/json' } })
+    // Подгружаем историю с сервера при загрузке (через единый endpoint)
+    fetch('/fcgi-bin/labwork1.jar?action=history', { method: 'POST', headers: { 'Accept': 'application/json' } })
         .then(r => r.json())
         .then(items => {
             if (Array.isArray(items)) {
@@ -114,7 +114,7 @@ function handleSubmit(e) {
     if (!validateY() || !yInput) return showToast('Введите корректное Y');
     if (selectedR === null) return showToast('Выберите R');
 
-    const url = `/calculate?x=${encodeURIComponent(selectedX)}&y=${encodeURIComponent(yInput)}&r=${encodeURIComponent(selectedR)}`;
+    const url = `/fcgi-bin/labwork1.jar?action=calc&x=${encodeURIComponent(selectedX)}&y=${encodeURIComponent(yInput)}&r=${encodeURIComponent(selectedR)}`;
     const start = performance.now();
     fetch(url, {
         method: 'POST',
@@ -195,7 +195,7 @@ function handleCanvasClick(e) {
 function clearAllResults() {
     showConfirmDialog('Очистить таблицу результатов?', () => {
         // Очищаем на сервере через /calculate с параметром clear=true
-        fetch('/calculate?clear=true', { method: 'POST' })
+        fetch('/fcgi-bin/labwork1.jar?action=clear', { method: 'POST' })
             .then(() => {
                 // Очищаем на клиенте
                 document.getElementById('resultsBody').innerHTML = '';
@@ -225,7 +225,7 @@ function clearSelectedResults() {
         });
         
         // Отправляем запрос на сервер для удаления выбранных записей
-        fetch(`/calculate?clearSelected=${selectedIds.join(',')}`, { method: 'POST' })
+        fetch(`/fcgi-bin/labwork1.jar?action=clearSelected&ids=${selectedIds.join(',')}`, { method: 'POST' })
             .then(() => {
                 // Удаляем на клиенте
                 checkboxes.forEach(checkbox => {

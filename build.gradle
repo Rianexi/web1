@@ -33,3 +33,12 @@ jar {
     }
     archiveFileName = 'labwork1.jar'
 }
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_17
+    targetCompatibility = JavaVersion.VERSION_17
+}
+
+compileJava {
+    options.release = 17
+}
