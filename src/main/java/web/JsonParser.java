@@ -5,10 +5,11 @@ import java.math.MathContext;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 
-public class JsonParser {
+public class JsonParser implements RequestParser {
     private static final MathContext MC = new MathContext(100);
     private String originalYString = null;
 
+    @Override
     public BigDecimal[] getBigDecimals(String requestString) throws IllegalArgumentException {
         if (requestString == null || requestString.trim().isEmpty()) {
             throw new IllegalArgumentException("Отсутствуют параметры запроса");
@@ -23,6 +24,7 @@ public class JsonParser {
         }
     }
 
+    @Override
     public String getOriginalYString() {
         return originalYString;
     }
