@@ -16,7 +16,7 @@ public class HttpResponseSender {
         sendRawJsonResponse(json, statusCode, statusText);
     }
 
-    public void sendRawJsonResponse(String json, int statusCode, String statusText) {
+    public void sendRawJsonResponse(String json, int statusCode, String statusText) { // отправка готового джсон строки с заголовками
         String response = String.format(
                 "Status: %d %s\r\nContent-Type: application/json; charset=utf-8\r\nAccess-Control-Allow-Origin: *\r\nContent-Length: %d\r\n\r\n%s",
                 statusCode, statusText, json.getBytes(StandardCharsets.UTF_8).length, json

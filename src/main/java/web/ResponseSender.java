@@ -4,7 +4,7 @@ import com.fastcgi.FCGIInterface;
 import java.math.BigDecimal;
 import java.util.Map;
 
-public class ResponseSender {
+public class ResponseSender { // данген мастер в мире обработки хттп
     private final RequestParser parser;
     private final PointService pointService;
     private final HttpResponseSender httpSender;
@@ -27,6 +27,11 @@ public class ResponseSender {
             String method = FCGIInterface.request.params.getProperty("REQUEST_METHOD");
             String queryString = FCGIInterface.request.params.getProperty("QUERY_STRING");
             String action = paramExtractor.getParameter(queryString, "action");
+
+            if (method == null || !"POST".equalsIgnoreCase(method)) {
+                httpSender.sendMethodNotAllowed("Only POST is allowed. Received: " + method);
+                return;
+            }
 
             if (action == null || action.isEmpty()) {
                 action = "calc";

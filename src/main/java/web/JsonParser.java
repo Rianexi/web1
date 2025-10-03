@@ -9,7 +9,7 @@ public class JsonParser implements RequestParser {
     private static final MathContext MC = new MathContext(100);
     private String originalYString = null;
 
-    @Override
+    @Override // определяем формат и вызываем соответствующую штуку (json или query-string)
     public BigDecimal[] getBigDecimals(String requestString) throws IllegalArgumentException {
         if (requestString == null || requestString.trim().isEmpty()) {
             throw new IllegalArgumentException("Отсутствуют параметры запроса");
@@ -28,7 +28,7 @@ public class JsonParser implements RequestParser {
         return originalYString;
     }
 
-    private BigDecimal[] parseJsonLike(String json) {
+    private BigDecimal[] parseJsonLike(String json) { // парс джсона
         try {
             String cleaned = json.replaceAll("[{}\"]", "");
             String[] parts = cleaned.split(",");
@@ -61,7 +61,7 @@ public class JsonParser implements RequestParser {
             throw new IllegalArgumentException("Invalid JSON format: " + e.getMessage());
         }
     }
-
+    // метод для парсинга query-string (формат URL параметров: x=1&y=2&r=3)
     private BigDecimal[] parseQueryString(String query) {
         try {
             String[] params = query.split("&");

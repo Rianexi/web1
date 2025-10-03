@@ -1,14 +1,14 @@
 let selectedX = null;
 let selectedR = null;
 
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function() { // событие DOM после хтмл
     initializeTheme();
     initializeEventListeners();
     drawCoordinatePlane();
     loadHistory();
 });
 
-function initializeTheme() {
+function initializeTheme() { // инициализация всего с темами + сохранение в браузер(мб убрать хз)
     const themeToggle = document.getElementById('themeToggle');
     const savedTheme = localStorage.getItem('theme') || 'dark';
     document.documentElement.setAttribute('data-theme', savedTheme);
@@ -22,7 +22,7 @@ function initializeTheme() {
     });
 }
 
-function initializeEventListeners() {
+function initializeEventListeners() { // основная хрень обработчик событий
     document.querySelectorAll('.x-btn').forEach(btn => {
         btn.addEventListener('click', function() {
             selectX(this.dataset.value);
@@ -34,9 +34,9 @@ function initializeEventListeners() {
             selectedR = parseFloat(this.value);
             updateCurrentPoint();
             drawCoordinatePlane();
-        });
+        }); // радиокнопки для RRRRR
     });
-
+    // обработчики для значений и тд в ирл
     document.getElementById('y-input').addEventListener('input', validateY);
     document.getElementById('pointForm').addEventListener('submit', handleSubmit);
     document.getElementById('coordinatePlane').addEventListener('click', handleCanvasClick);
@@ -85,12 +85,12 @@ function validateY() {
     return true;
 }
 
-function truncateNumber(value, maxLength = 8) {
+function truncateNumber(value, maxLength = 8) { // для убирания 1.999999
     const str = String(value);
     return str.length <= maxLength ? str : str.substring(0, maxLength) + '...';
 }
 
-function updateCurrentPoint() {
+function updateCurrentPoint() { // обновление текущий параметров
     const yValue = document.getElementById('y-input').value;
     const pointDisplay = document.getElementById('currentPoint');
 
@@ -105,7 +105,7 @@ function updateCurrentPoint() {
     pointDisplay.title = fullText;
 }
 
-function handleSubmit(e) {
+function handleSubmit(e) { // обработчик отправки формы
     e.preventDefault();
 
     const yInput = document.getElementById('y-input').value.trim();
@@ -117,7 +117,7 @@ function handleSubmit(e) {
     const url = `/fcgi-bin/labwork1.jar?action=calc&x=${encodeURIComponent(selectedX)}&y=${encodeURIComponent(yInput)}&r=${encodeURIComponent(selectedR)}`;
     const startTime = performance.now();
 
-    fetch(url, {
+    fetch(url, { // отправка пост запроса серверу
         method: 'POST',
         headers: { 'Accept': 'application/json' }
     })
@@ -151,7 +151,7 @@ function handleSubmit(e) {
         });
 }
 
-function handleCanvasClick(e) {
+function handleCanvasClick(e) { // омагад можно тыкать по графику (починить по возможности)
     if (!selectedR) return showToast('Сначала выберите значение R', 'error');
 
     const canvas = e.target;
@@ -167,7 +167,7 @@ function handleCanvasClick(e) {
     const y = (centerY - clickY) / scale;
 
     const validX = [-3, -2, -1, 0, 1, 2, 3, 4, 5];
-    const nearestX = validX.reduce((prev, curr) =>
+    const nearestX = validX.reduce((prev, curr) => // ищу близжайший Х мб фикс
         Math.abs(curr - x) < Math.abs(prev - x) ? curr : prev
     );
 
@@ -179,7 +179,7 @@ function handleCanvasClick(e) {
 }
 
 function loadHistory() {
-    fetch('/fcgi-bin/labwork1.jar?action=history', {
+    fetch('/fcgi-bin/labwork1.jar?action=history', { // пост запрос для истории
         method: 'POST',
         headers: { 'Accept': 'application/json' }
     })
@@ -240,7 +240,7 @@ function clearSelectedResults() {
     });
 }
 
-function drawCoordinatePlane() {
+function drawCoordinatePlane() { // рисовалка графика
     const canvas = document.getElementById('coordinatePlane');
     const ctx = canvas.getContext('2d');
     const scale = 25;

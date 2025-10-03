@@ -4,7 +4,7 @@ import java.math.BigDecimal;
 import java.math.MathContext;
 import java.math.RoundingMode;
 
-public class Checker {
+public class Checker { // проверка попадения точек в область
     private final BigDecimal X_MIN = new BigDecimal("-3");
     private final BigDecimal X_MAX = new BigDecimal("5");
 
@@ -17,7 +17,7 @@ public class Checker {
     private final BigDecimal TWO = new BigDecimal("2");
     private final MathContext mathContext = new MathContext(10, RoundingMode.HALF_UP);
 
-    public void validate(BigDecimal x, BigDecimal y, BigDecimal r) {
+    public void validate(BigDecimal x, BigDecimal y, BigDecimal r) { // validation йоу
         if (x.compareTo(X_MIN) < 0 || x.compareTo(X_MAX) > 0)
             throw new IllegalArgumentException("X должен быть в диапазоне [-3; 5]");
         if (y.compareTo(Y_MIN) < 0 || y.compareTo(Y_MAX) > 0)
@@ -26,7 +26,7 @@ public class Checker {
             throw new IllegalArgumentException("R должен быть в диапазоне [1; 3]");
     }
 
-    public boolean isHit(BigDecimal x, BigDecimal y, BigDecimal r) {
+    public boolean isHit(BigDecimal x, BigDecimal y, BigDecimal r) { // чекер результата если попало хоть куда то
         return (checkRectangle(x, y, r) || checkCircle(x, y, r) || checkTriangle(x, y, r));
     }
 

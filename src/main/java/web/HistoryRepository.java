@@ -15,7 +15,7 @@ public class HistoryRepository {
         this.historyFilePath = historyFilePath;
     }
 
-    public String readJsonArray() {
+    public String readJsonArray() { // метод для чтения json массива
         try {
             File f = new File(historyFilePath);
             if (!f.exists()) return "[]";
@@ -39,7 +39,7 @@ public class HistoryRepository {
         }
     }
 
-    public List<String> readObjects() {
+    public List<String> readObjects() { // парсинг json массива для лута обьектов
         String json = readJsonArray();
         List<String> res = new ArrayList<>();
         String s = json.trim();
@@ -60,7 +60,7 @@ public class HistoryRepository {
         return res;
     }
 
-    public void writeObjects(List<String> objects) {
+    public void writeObjects(List<String> objects) { // запись списка обьектов в массивчик json
         StringBuilder sb = new StringBuilder();
         sb.append('[');
         for (int i = 0; i < objects.size(); i++) {

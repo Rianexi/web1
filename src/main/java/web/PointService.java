@@ -4,7 +4,7 @@ import java.math.BigDecimal;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
-public class PointService {
+public class PointService { // зависимости
     private final Checker checker;
     private final HistoryRepository historyRepo;
     private final JsonSerializer jsonSerializer;
@@ -12,13 +12,13 @@ public class PointService {
     private final int historyLimit;
 
     public PointService(Checker checker, HistoryRepository historyRepo, JsonSerializer jsonSerializer, int historyLimit) {
-        this.checker = checker;
+        this.checker = checker; // принятие зависимостей
         this.historyRepo = historyRepo;
         this.jsonSerializer = jsonSerializer;
         this.dateFormat = new SimpleDateFormat("dd.MM.yyyy HH:mm:ss");
         this.historyLimit = historyLimit;
     }
-
+   // главная проверка точки
     public Map<String, Object> checkPoint(BigDecimal x, BigDecimal y, BigDecimal r, String originalYString) {
         long startTime = System.nanoTime();
 

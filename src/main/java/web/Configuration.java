@@ -1,11 +1,11 @@
 package web;
 
-public class Configuration {
+public class Configuration { // кфг для всего
     private final String fcgiPort;
     private final String historyFile;
     private final int historyLimit;
 
-    public Configuration() {
+    public Configuration() { // мб убрать если не то то то но мб подумать и забить
         this.fcgiPort = System.getenv().getOrDefault("FCGI_PORT", "25502");
         this.historyFile = System.getenv().getOrDefault("HISTORY_FILE", "history.json");
         this.historyLimit = 1000;

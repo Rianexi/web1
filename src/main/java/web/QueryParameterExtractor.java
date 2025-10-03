@@ -3,7 +3,7 @@ package web;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 
-public class QueryParameterExtractor {
+public class QueryParameterExtractor { // для извлечения параметров из query string
 
     public String getParameter(String queryString, String key) {
         if (queryString == null || queryString.isEmpty() || key == null) return null;
