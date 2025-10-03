@@ -36,7 +36,6 @@ public class HistoryRepository {
                 out.write(json.getBytes(StandardCharsets.UTF_8));
             }
         } catch (IOException e) {
-            // ignore
         }
     }
 

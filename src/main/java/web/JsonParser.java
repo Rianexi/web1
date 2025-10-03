@@ -16,7 +16,6 @@ public class JsonParser implements RequestParser {
         }
         requestString = requestString.trim();
 
-        // Определяем формат: JSON-объект или query-string
         if (requestString.startsWith("{") && requestString.endsWith("}")) {
             return parseJsonLike(requestString);
         } else {
@@ -31,7 +30,6 @@ public class JsonParser implements RequestParser {
 
     private BigDecimal[] parseJsonLike(String json) {
         try {
-            // Простой разбор без внешних зависимостей
             String cleaned = json.replaceAll("[{}\"]", "");
             String[] parts = cleaned.split(",");
 

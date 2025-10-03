@@ -4,14 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Лабораторная работа №1</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
 <div class="container">
-    <!-- Заголовок -->
     <header class="header">
         <div class="header-content">
             <div class="header-top">
@@ -34,14 +31,10 @@
         </div>
     </header>
 
-    <!-- Основной контент -->
     <main class="main-content">
-        <!-- Левая панель - параметры -->
         <section class="card parameters-card">
             <h2>Параметры точки</h2>
-
             <form id="pointForm" class="form">
-                <!-- Координата X -->
                 <div class="input-group">
                     <label>Координата X:</label>
                     <div class="x-buttons">
@@ -58,14 +51,12 @@
                     <input type="hidden" id="x-input" name="x" required>
                 </div>
 
-                <!-- Координата Y -->
                 <div class="input-group">
                     <label for="y-input">Координата Y (-5 ... 5):</label>
                     <input type="text" id="y-input" name="y" placeholder="Введите значение Y" required>
                     <span class="error-message" id="y-error"></span>
                 </div>
 
-                <!-- Радиус R -->
                 <div class="input-group">
                     <label>Радиус R:</label>
                     <div class="r-options">
@@ -106,19 +97,15 @@
             </form>
         </section>
 
-        <!-- Правая панель - график -->
         <section class="card graph-card">
             <h2>График области</h2>
             <div class="canvas-container">
                 <canvas id="coordinatePlane" width="350" height="350"></canvas>
             </div>
-            <div class="current-point" id="currentPoint">
-                X: — &nbsp;&nbsp; Y: — &nbsp;&nbsp; R: —
-            </div>
+            <div class="current-point" id="currentPoint">X: — &nbsp;&nbsp; Y: — &nbsp;&nbsp; R: —</div>
         </section>
     </main>
 
-    <!-- Таблица результатов -->
     <section class="card results-card">
         <div class="results-header">
             <h2>История результатов</h2>
@@ -152,17 +139,13 @@
                     <th>Время выполнения</th>
                 </tr>
                 </thead>
-                <tbody id="resultsBody">
-                <!-- Результаты будут добавляться динамически -->
-                </tbody>
+                <tbody id="resultsBody"></tbody>
             </table>
         </div>
     </section>
 </div>
 
-<!-- Toast уведомления -->
 <div id="toast" class="toast"></div>
-
 <script src="script.js"></script>
 </body>
 </html>

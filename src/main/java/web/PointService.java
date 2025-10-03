@@ -45,16 +45,12 @@ public class PointService {
 
     private void saveToHistory(Map<String, Object> result) {
         List<String> history = historyRepo.readObjects();
-
         Map<String, Object> historyItem = new LinkedHashMap<>(result);
         historyItem.remove("time");
-
         history.add(0, jsonSerializer.toJson(historyItem));
-
         if (history.size() > historyLimit) {
             history = new ArrayList<>(history.subList(0, historyLimit));
         }
-
         historyRepo.writeObjects(history);
     }
 

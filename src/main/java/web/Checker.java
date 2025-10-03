@@ -7,10 +7,13 @@ import java.math.RoundingMode;
 public class Checker {
     private final BigDecimal X_MIN = new BigDecimal("-3");
     private final BigDecimal X_MAX = new BigDecimal("5");
+
     private final BigDecimal Y_MIN = new BigDecimal("-5");
     private final BigDecimal Y_MAX = new BigDecimal("5");
+
     private final BigDecimal R_MIN = BigDecimal.ONE;
     private final BigDecimal R_MAX = new BigDecimal("3");
+
     private final BigDecimal TWO = new BigDecimal("2");
     private final MathContext mathContext = new MathContext(10, RoundingMode.HALF_UP);
 
@@ -39,11 +42,9 @@ public class Checker {
         if (x.compareTo(BigDecimal.ZERO) > 0 || y.compareTo(BigDecimal.ZERO) > 0) {
             return false;
         }
-
         BigDecimal halfR = r.divide(TWO, mathContext);
         BigDecimal radiusSquared = halfR.multiply(halfR);
         BigDecimal distanceSquared = x.multiply(x).add(y.multiply(y));
-
         return distanceSquared.compareTo(radiusSquared) <= 0;
     }
 
