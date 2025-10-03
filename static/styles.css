@@ -1,5 +1,5 @@
-/* Импорт нестандартного шрифта */
-@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap');
+/* Шрифты и сброс */
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Inter:wght@400;500;600;700&display=swap');
 
 * {
     margin: 0;
@@ -7,531 +7,666 @@
     box-sizing: border-box;
 }
 
+:root {
+    /* Переменные для темной темы */
+    --bg-primary: #0a0a0a;
+    --bg-secondary: #1a1a1a;
+    --bg-card: #1e1e1e;
+    --bg-hover: #2a2a2a;
+    --border: #333;
+    --border-hover: #555;
+    --text-primary: #ffffff;
+    --text-secondary: #b0b0b0;
+    --text-muted: #666;
+    --accent: #00d4ff;
+    --accent-hover: #00b8e6;
+    --success: #00ff88;
+    --error: #ff4757;
+    --warning: #ffa726;
+    --shadow: rgba(0, 0, 0, 0.3);
+    --gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    --transition: all 0.3s ease;
+}
+
+/* Светлая тема */
+[data-theme="light"] {
+    --bg-primary: #f8fafc;
+    --bg-secondary: #ffffff;
+    --bg-card: #ffffff;
+    --bg-hover: #f1f5f9;
+    --border: #e2e8f0;
+    --border-hover: #cbd5e1;
+    --text-primary: #1e293b;
+    --text-secondary: #475569;
+    --text-muted: #94a3b8;
+    --accent: #3b82f6;
+    --accent-hover: #2563eb;
+    --success: #10b981;
+    --error: #ef4444;
+    --warning: #f59e0b;
+    --shadow: rgba(0, 0, 0, 0.1);
+}
+
 body {
-    font-family: 'Nunito', sans-serif;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    font-family: 'Inter', sans-serif;
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    line-height: 1.6;
     min-height: 100vh;
-    color: #333;
+    transition: var(--transition);
 }
 
 .container {
     max-width: 1200px;
     margin: 0 auto;
     padding: 20px;
-    overflow-x: hidden;
 }
 
 /* Заголовок */
 .header {
     text-align: center;
-    margin-bottom: 30px;
+    margin-bottom: 2rem;
 }
 
-.header h1 {
-    font-family: serif;
-    font-size: 2.5em;
-    font-weight: 800;
-    color: #ffffff;
-    margin-bottom: 15px;
-    text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+.header-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.header-content h1 {
+    font-family: serif; /* Требование ЛР - явно задан serif */
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: #5c6bc0; /* Фиксированный цвет для соответствия требованиям */
+    margin: 0;
+}
+
+/* Переключатель темы */
+.theme-toggle {
+    position: relative;
+    width: 48px;
+    height: 48px;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    background: var(--bg-card);
+    cursor: pointer;
+    transition: var(--transition);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.theme-toggle:hover {
+    border-color: var(--accent);
+    background: var(--bg-hover);
+    transform: scale(1.05);
+}
+
+.theme-toggle .sun-icon {
+    color: var(--accent);
+    opacity: 1;
+    transition: var(--transition);
+}
+
+.theme-toggle .moon-icon {
+    position: absolute;
+    color: var(--accent);
+    opacity: 0;
+    transition: var(--transition);
+}
+
+[data-theme="light"] .theme-toggle .sun-icon {
+    opacity: 0;
+}
+
+[data-theme="light"] .theme-toggle .moon-icon {
+    opacity: 1;
 }
 
 .student-info {
     display: flex;
     justify-content: center;
-    gap: 40px;
+    gap: 2rem;
     flex-wrap: wrap;
+    font-family: serif; /* Требование ЛР */
+    color: var(--text-secondary);
+    font-size: 1.1rem;
+    font-weight: 600;
 }
 
-.student-info span {
-    font-family: serif;
-    color: #e8eaf6;
-    font-size: 1.1em;
+/* Карточки */
+.card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 1.5rem;
+    box-shadow: 0 4px 20px var(--shadow);
+    transition: var(--transition);
+}
+
+.card:hover {
+    border-color: var(--border-hover);
+    box-shadow: 0 8px 30px var(--shadow);
+}
+
+.card h2 {
+    color: var(--accent);
+    font-size: 1.25rem;
     font-weight: 600;
+    margin-bottom: 1.5rem;
+    text-align: center;
 }
 
 /* Основной контент */
 .main-content {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 30px;
-    margin-bottom: 30px;
+    gap: 2rem;
+    margin-bottom: 2rem;
     align-items: start;
 }
 
-.main-content > * {
-    min-width: 0;
+/* Форма */
+.form {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
 }
 
-/* Панели */
-.parameters-panel,
-.graph-panel {
-    background: rgba(255, 255, 255, 0.95);
-    backdrop-filter: blur(10px);
-    border-radius: 20px;
-    padding: 25px;
-    box-shadow: 0 8px 32px rgba(0,0,0,0.1);
-    border: 1px solid rgba(255,255,255,0.2);
-    min-width: 0;
-}
-
-.parameters-panel h2,
-.graph-panel h2 {
-    color: #5c6bc0;
-    font-size: 1.4em;
-    font-weight: 700;
-    margin-bottom: 20px;
-    text-align: center;
-}
-
-/* Группы ввода */
 .input-group {
-    margin-bottom: 25px;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
 }
 
 .input-group label {
-    display: block;
-    margin-bottom: 10px;
-    color: #424242;
-    font-weight: 600;
-    font-size: 0.95em;
+    color: var(--text-secondary);
+    font-weight: 500;
+    font-size: 0.9rem;
 }
 
-/* Кнопки для X */
+/* Кнопки X */
 .x-buttons {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    gap: 8px;
+    gap: 0.5rem;
 }
 
 .x-btn {
-    padding: 10px;
-    border: 2px solid #e0e0e0;
-    background: white;
-    color: #424242;
+    padding: 10%; /* Требование ЛР - отступы в процентах */
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
     border-radius: 8px;
+    color: var(--text-primary);
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 500;
     cursor: pointer;
-    font-weight: 600;
-    font-family: 'Nunito', sans-serif;
-    transition: all 0.3s ease;
+    transition: var(--transition);
 }
 
 .x-btn:hover {
-    border-color: #5c6bc0;
-    color: #5c6bc0;
-    transform: translateY(-2px);
+    background: var(--bg-hover);
+    border-color: var(--accent);
+    transform: translateY(-1px);
 }
 
 .x-btn.selected {
-    background: #5c6bc0;
-    color: white;
-    border-color: #5c6bc0;
+    background: var(--accent);
+    border-color: var(--accent);
+    color: var(--bg-primary);
 }
 
-/* Поле ввода Y */
+/* Поле Y - ограничиваем ширину и скрываем переполнение */
 #y-input {
+    padding: 2%; /* Требование ЛР - отступы в процентах */
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text-primary);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.9rem;
+    transition: var(--transition);
     width: 100%;
-    padding: 12px 15px;
-    border: 2px solid #e0e0e0;
-    border-radius: 10px;
-    font-size: 1em;
-    font-family: 'Nunito', sans-serif;
-    transition: all 0.3s ease;
+    max-width: 100%;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    overflow: hidden;
 }
 
 #y-input:focus {
     outline: none;
-    border-color: #5c6bc0;
-    box-shadow: 0 0 0 3px rgba(92, 107, 192, 0.1);
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+#y-input::placeholder {
+    color: var(--text-muted);
 }
 
 .error-message {
-    color: #f44336;
-    font-size: 0.85em;
-    margin-top: 5px;
-    display: block;
+    color: var(--error);
+    font-size: 0.8rem;
+    font-family: 'JetBrains Mono', monospace;
 }
 
-/* Радио-кнопки для R */
+/* Радио-кнопки */
 .r-options {
     display: flex;
-    gap: 15px;
+    gap: 1rem;
     flex-wrap: wrap;
 }
 
-.radio-label {
+.radio-option {
     display: flex;
     align-items: center;
+    gap: 0.5rem;
     cursor: pointer;
-    font-weight: 600;
-    color: #424242;
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 500;
+    transition: var(--transition);
+    color: var(--text-primary);
 }
 
-.radio-label input[type="radio"] {
+.radio-option:hover {
+    color: var(--accent);
+}
+
+.radio-option input[type="radio"] {
     display: none;
 }
 
-.radio-custom {
-    width: 20px;
-    height: 20px;
-    border: 2px solid #bdbdbd;
+.radio-mark {
+    width: 18px;
+    height: 18px;
+    border: 2px solid var(--border);
     border-radius: 50%;
-    margin-right: 8px;
     position: relative;
-    transition: all 0.3s ease;
+    transition: var(--transition);
 }
 
-.radio-label input[type="radio"]:checked + .radio-custom {
-    border-color: #5c6bc0;
-    background: #5c6bc0;
+.radio-option input[type="radio"]:checked + .radio-mark {
+    border-color: var(--accent);
+    background: var(--accent);
 }
 
-.radio-label input[type="radio"]:checked + .radio-custom::after {
+.radio-option input[type="radio"]:checked + .radio-mark::after {
     content: '';
-    width: 8px;
-    height: 8px;
-    background: white;
-    border-radius: 50%;
     position: absolute;
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
+    width: 6px;
+    height: 6px;
+    background: var(--bg-card);
+    border-radius: 50%;
 }
 
 /* Кнопка отправки */
 .submit-btn {
-    width: 100%;
-    padding: 15px;
-    background: linear-gradient(135deg, #5c6bc0, #7986cb);
-    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 3%; /* Требование ЛР - отступы в процентах */
+    background: var(--accent);
+    color: var(--bg-primary);
     border: none;
     border-radius: 12px;
-    font-size: 1.1em;
-    font-weight: 700;
-    font-family: 'Nunito', sans-serif;
+    font-weight: 600;
+    font-size: 1rem;
     cursor: pointer;
-    transition: all 0.3s ease;
-    box-shadow: 0 4px 15px rgba(92, 107, 192, 0.3);
+    transition: var(--transition);
+    margin-top: 0.5rem;
 }
 
 .submit-btn:hover {
+    background: var(--accent-hover);
     transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(92, 107, 192, 0.4);
+    box-shadow: 0 8px 25px rgba(59, 130, 246, 0.3);
 }
 
-.submit-btn:active {
-    transform: translateY(0);
-}
-
-/* График */
+/* Canvas */
 .canvas-container {
-    text-align: center;
-    margin-bottom: 15px;
+    display: flex;
+    justify-content: center;
+    margin-bottom: 1rem;
 }
 
 #coordinatePlane {
-    border: 2px solid #e0e0e0;
-    border-radius: 10px;
-    background: white;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    background: var(--bg-secondary);
+    transition: var(--transition);
+    cursor: crosshair;
 }
 
+/* Текущая точка - ограничиваем длину и добавляем tooltip */
 .current-point {
     text-align: center;
-    color: #424242;
-    font-weight: 600;
-    padding: 10px;
-    background: rgba(92, 107, 192, 0.1);
+    font-family: 'JetBrains Mono', monospace;
+    color: var(--text-secondary);
+    background: var(--bg-secondary);
+    padding: 2%; /* Требование ЛР - отступы в процентах */
     border-radius: 8px;
-    font-size: 0.9em;
+    border: 1px solid var(--border);
+    transition: var(--transition);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    cursor: help;
 }
 
 /* Секция результатов */
-.results-section {
-    background: rgba(255, 255, 255, 0.95);
-    backdrop-filter: blur(10px);
-    border-radius: 20px;
-    padding: 25px;
-    box-shadow: 0 8px 32px rgba(0,0,0,0.1);
-    border: 1px solid rgba(255,255,255,0.2);
+.results-card {
+    grid-column: 1 / -1;
 }
 
-/* Toast уведомления */
-.toast {
-    position: fixed;
-    left: 50%;
-    bottom: 30px;
-    transform: translateX(-50%);
-    background: #323232;
-    color: #fff;
-    padding: 12px 16px;
+.results-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.control-buttons {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.btn {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 1.5%; /* Требование ЛР - отступы в процентах */
+    border: none;
     border-radius: 8px;
-    box-shadow: 0 6px 20px rgba(0,0,0,0.25);
-    z-index: 1000;
-    opacity: 0;
-    transition: opacity .2s ease, transform .2s ease;
-    max-width: 80%;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    font-weight: 500;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: var(--transition);
 }
 
-.toast.show {
-    opacity: 1;
-    transform: translateX(-50%) translateY(-5px);
+.btn-warning {
+    background: var(--warning);
+    color: var(--bg-primary);
 }
 
-.results-section h2 {
-    color: #5c6bc0;
-    font-size: 1.4em;
-    font-weight: 700;
-    margin-bottom: 20px;
-    text-align: center;
+.btn-warning:hover {
+    opacity: 0.9;
+    transform: translateY(-1px);
 }
 
+.btn-danger {
+    background: var(--error);
+    color: white;
+}
+
+.btn-danger:hover {
+    opacity: 0.9;
+    transform: translateY(-1px);
+}
+
+/* Таблица */
 .table-container {
     overflow-x: auto;
     border-radius: 12px;
-    overflow: hidden;
+    border: 1px solid var(--border);
 }
 
 .results-table {
     width: 100%;
     border-collapse: collapse;
-    background: white;
-    font-size: 0.9em;
-    table-layout: fixed;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.85rem;
+    background: var(--bg-card);
+    table-layout: fixed; /* Фиксируем ширину колонок */
 }
 
 .results-table th {
-    background: linear-gradient(135deg, #5c6bc0, #7986cb);
-    color: white;
-    padding: 12px;
-    text-align: center;
-    font-weight: 700;
-    font-family: serif;
+    background: var(--bg-secondary);
+    padding: 1rem 0.75rem;
+    text-align: left;
+    font-weight: 600;
+    color: var(--accent);
+    border-bottom: 1px solid var(--border);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
 }
 
 .results-table td {
-    padding: 12px;
-    text-align: center;
-    border-bottom: 1px solid #e0e0e0;
+    padding: 1.5%; /* Требование ЛР - отступы в процентах */
+    border-bottom: 1px solid var(--border);
+    color: var(--text-primary);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    max-width: 0; /* Принудительно ограничиваем ширину */
 }
 
-/* Узкие колонки для чекбокса и результата, остальные делятся поровну */
-.results-table th:nth-child(1),
-.results-table td:nth-child(1) { width: 40px; }
-.results-table th:nth-child(5),
-.results-table td:nth-child(5) { width: 120px; }
-
+/* Наследование для таблицы */
 .results-table tbody tr:hover {
-    background-color: rgba(92, 107, 192, 0.05);
+    background: var(--bg-hover); /* Наследование hover состояния */
 }
 
 .results-table tbody tr:nth-child(even) {
-    background-color: #f8f9fa;
+    background: var(--bg-secondary); /* Каскадирование для четных строк */
+}
+
+/* Фиксированные ширины колонок */
+.results-table th:nth-child(1),
+.results-table td:nth-child(1) {
+    width: 50px;
+    min-width: 50px;
+    max-width: 50px;
+}
+
+.results-table th:nth-child(2),
+.results-table td:nth-child(2) {
+    width: 80px;
+    min-width: 80px;
+    max-width: 80px;
+}
+
+.results-table th:nth-child(3),
+.results-table td:nth-child(3) {
+    width: 120px;
+    min-width: 120px;
+    max-width: 120px;
+}
+
+.results-table th:nth-child(4),
+.results-table td:nth-child(4) {
+    width: 80px;
+    min-width: 80px;
+    max-width: 80px;
+}
+
+.results-table th:nth-child(5),
+.results-table td:nth-child(5) {
+    width: 120px;
+    min-width: 120px;
+    max-width: 120px;
+}
+
+.results-table th:nth-child(6),
+.results-table td:nth-child(6) {
+    width: 150px;
+    min-width: 150px;
+    max-width: 150px;
+}
+
+.results-table th:nth-child(7),
+.results-table td:nth-child(7) {
+    width: 120px;
+    min-width: 120px;
+    max-width: 120px;
+}
+
+/* Toast */
+.toast {
+    position: fixed;
+    bottom: 2rem;
+    left: 50%;
+    transform: translateX(-50%) translateY(100px);
+    background: var(--bg-card);
+    color: var(--text-primary);
+    padding: 1rem 1.5rem;
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    box-shadow: 0 8px 30px var(--shadow);
+    font-family: 'JetBrains Mono', monospace;
+    z-index: 1000;
+    opacity: 0;
+    transition: var(--transition);
+}
+
+.toast.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+}
+
+.toast.error {
+    border-color: var(--error);
+    background: var(--error);
+    color: white;
+}
+
+.toast.success {
+    border-color: var(--success);
+    background: var(--success);
+    color: white;
+}
+
+/* Диалог подтверждения */
+.confirm-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2000;
+}
+
+.confirm-dialog {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 2rem;
+    max-width: 400px;
+    width: 90%;
+    text-align: center;
+    box-shadow: 0 20px 60px var(--shadow);
+}
+
+.confirm-message {
+    margin-bottom: 1.5rem;
+    color: var(--text-primary);
+    font-size: 1.1rem;
+}
+
+.confirm-buttons {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+}
+
+.confirm-btn {
+    padding: 2%; /* Требование ЛР - отступы в процентах */
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: var(--transition);
+    min-width: 80px;
+}
+
+.confirm-cancel {
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+    border: 1px solid var(--border);
+}
+
+.confirm-cancel:hover {
+    background: var(--bg-hover);
+}
+
+.confirm-ok {
+    background: var(--accent);
+    color: var(--bg-primary);
+}
+
+.confirm-ok:hover {
+    background: var(--accent-hover);
+}
+
+/* Чекбоксы */
+.result-checkbox, #selectAll {
+    cursor: pointer;
+    transform: scale(1.2);
 }
 
 /* Адаптивность */
 @media (max-width: 768px) {
     .main-content {
         grid-template-columns: 1fr;
-        gap: 20px;
+    }
+
+    .header-top {
+        flex-direction: column;
+        gap: 1rem;
     }
 
     .student-info {
         flex-direction: column;
-        gap: 10px;
+        gap: 0.5rem;
     }
 
     .x-buttons {
         grid-template-columns: repeat(2, 1fr);
     }
 
-    .r-options {
-        justify-content: center;
-    }
-
-    .header h1 {
-        font-size: 2em;
-    }
-}
-
-@media (max-width: 480px) {
-    .container {
-        padding: 15px;
-    }
-
-    .parameters-panel,
-    .graph-panel,
-    .results-section {
-        padding: 20px;
-    }
-
-    #coordinatePlane {
-        width: 280px;
-        height: 280px;
-    }
-}
-/* ... весь предыдущий CSS остается без изменений ... */
-
-/* Новые стили для кнопок очистки */
-.results-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 20px;
-    flex-wrap: wrap;
-    gap: 15px;
-}
-
-.clear-buttons {
-    display: flex;
-    gap: 10px;
-    flex-wrap: wrap;
-}
-
-.clear-btn {
-    padding: 8px 16px;
-    border: none;
-    border-radius: 6px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    font-family: 'Nunito', sans-serif;
-    font-size: 0.9em;
-}
-
-.clear-selected {
-    background: linear-gradient(135deg, #ff9800, #f57c00);
-    color: white;
-}
-
-.clear-selected:hover {
-    background: linear-gradient(135deg, #f57c00, #e65100);
-    transform: translateY(-1px);
-}
-
-.clear-all {
-    background: linear-gradient(135deg, #f44336, #d32f2f);
-    color: white;
-}
-
-.clear-all:hover {
-    background: linear-gradient(135deg, #d32f2f, #b71c1c);
-    transform: translateY(-1px);
-}
-
-/* Стили для чекбоксов */
-.result-checkbox, #selectAll {
-    cursor: pointer;
-    transform: scale(1.2);
-}
-
-/* Адаптивность для мобильных */
-@media (max-width: 768px) {
     .results-header {
         flex-direction: column;
         align-items: stretch;
     }
 
-    .clear-buttons {
+    .control-buttons {
         justify-content: center;
     }
 }
 
-/* Стили для диалога подтверждения */
-.confirm-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.5);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 2000;
-}
-
-.confirm-dialog {
-    background: white;
-    border-radius: 12px;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-    max-width: 400px;
-    width: 90%;
-    animation: dialogSlideIn 0.2s ease-out;
-}
-
-@keyframes dialogSlideIn {
-    from {
-        opacity: 0;
-        transform: scale(0.9) translateY(-20px);
+@media (max-width: 480px) {
+    .container {
+        padding: 1rem;
     }
-    to {
-        opacity: 1;
-        transform: scale(1) translateY(0);
+
+    .card {
+        padding: 1rem;
+    }
+
+    .header-content h1 {
+        font-size: 2rem;
+    }
+
+    .theme-toggle {
+        width: 44px;
+        height: 44px;
     }
 }
 
-.confirm-content {
-    padding: 24px;
-    text-align: center;
-}
-
-.confirm-icon {
-    font-size: 2.5em;
-    margin-bottom: 16px;
-}
-
-.confirm-message {
-    font-size: 1.1em;
-    color: #424242;
-    margin-bottom: 24px;
-    line-height: 1.4;
-}
-
-.confirm-buttons {
-    display: flex;
-    gap: 12px;
-    justify-content: center;
-}
-
-.confirm-btn {
-    padding: 10px 20px;
-    border: none;
-    border-radius: 8px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    font-family: 'Nunito', sans-serif;
-    font-size: 0.95em;
-}
-
-.confirm-cancel {
-    background: #f5f5f5;
-    color: #666;
-}
-
-.confirm-cancel:hover {
-    background: #e0e0e0;
-}
-
-.confirm-ok {
-    background: linear-gradient(135deg, #5c6bc0, #7986cb);
-    color: white;
-}
-
-.confirm-ok:hover {
-    background: linear-gradient(135deg, #7986cb, #9fa8da);
-    transform: translateY(-1px);
+/* Плавные переходы для переключения темы */
+* {
+    transition: background-color 0.3s ease,
+    border-color 0.3s ease,
+    color 0.3s ease,
+    box-shadow 0.3s ease;
 }

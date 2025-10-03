@@ -5,9 +5,9 @@ import java.math.MathContext;
 import java.math.RoundingMode;
 
 public class Checker {
-    private final BigDecimal X_MIN = new BigDecimal("-2");
-    private final BigDecimal X_MAX = new BigDecimal("2");
-    private final BigDecimal Y_MIN = new BigDecimal("-3");
+    private final BigDecimal X_MIN = new BigDecimal("-3");
+    private final BigDecimal X_MAX = new BigDecimal("5");
+    private final BigDecimal Y_MIN = new BigDecimal("-5");
     private final BigDecimal Y_MAX = new BigDecimal("5");
     private final BigDecimal R_MIN = BigDecimal.ONE;
     private final BigDecimal R_MAX = new BigDecimal("3");
@@ -16,10 +16,10 @@ public class Checker {
 
     public void validate(BigDecimal x, BigDecimal y, BigDecimal r) {
         if (x.compareTo(X_MIN) < 0 || x.compareTo(X_MAX) > 0)
-            throw new IllegalArgumentException("X должен быть в диапазоне [-2; 2]");
+            throw new IllegalArgumentException("X должен быть в диапазоне [-3; 5]");
         // Делаем границы Y включительными: [-3; 5]
         if (y.compareTo(Y_MIN) < 0 || y.compareTo(Y_MAX) > 0)
-            throw new IllegalArgumentException("Y должен быть в диапазоне [-3; 5]");
+            throw new IllegalArgumentException("Y должен быть в диапазоне [-5; 5]");
         if (r.compareTo(R_MIN) < 0 || r.compareTo(R_MAX) > 0)
             throw new IllegalArgumentException("R должен быть в диапазоне [1; 3]");
     }
