@@ -30,6 +30,19 @@ public class Checker { // проверка попадения точек в об
         return (checkRectangle(x, y, r) || checkCircle(x, y, r) || checkTriangle(x, y, r));
     }
 
+    // публичные проверки отдельных фигур для эндпоинтов
+    public boolean isHitCircle(BigDecimal x, BigDecimal y, BigDecimal r) {
+        return checkCircle(x, y, r);
+    }
+
+    public boolean isHitRectangle(BigDecimal x, BigDecimal y, BigDecimal r) {
+        return checkRectangle(x, y, r);
+    }
+
+    public boolean isHitTriangle(BigDecimal x, BigDecimal y, BigDecimal r) {
+        return checkTriangle(x, y, r);
+    }
+
     private boolean checkRectangle(BigDecimal x, BigDecimal y, BigDecimal r) {
         BigDecimal halfR = r.divide(TWO, mathContext);
         return (x.compareTo(BigDecimal.ZERO) >= 0 &&

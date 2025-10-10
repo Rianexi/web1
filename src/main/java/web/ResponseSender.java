@@ -8,7 +8,7 @@ public class ResponseSender { // данген мастер в мире обра�
     private final RequestParser parser;
     private final PointService pointService;
     private final HttpResponseSender httpSender;
-    private final QueryParameterExtractor paramExtractor;
+    
 
     public ResponseSender(Configuration config) {
         this.parser = new JsonParser();
@@ -19,39 +19,30 @@ public class ResponseSender { // данген мастер в мире обра�
 
         this.httpSender = new HttpResponseSender(jsonSerializer);
         this.pointService = new PointService(checker, historyRepo, jsonSerializer, config.getHistoryLimit(), this.httpSender);
-        this.paramExtractor = new QueryParameterExtractor();
+        
     }
 
     public void sendResponse() {
         try {
             String method = FCGIInterface.request.params.getProperty("REQUEST_METHOD");
-            String queryString = FCGIInterface.request.params.getProperty("QUERY_STRING");
-            String action = paramExtractor.getParameter(queryString, "action");
+            String requestUri = FCGIInterface.request.params.getProperty("REQUEST_URI");
 
             if (method == null || !"POST".equalsIgnoreCase(method)) {
                 httpSender.sendMethodNotAllowed("Only POST is allowed. Received: " + method);
                 return;
             }
 
-            if (action == null || action.isEmpty()) {
-                action = "calc";
-            }
-
-            switch (action.toLowerCase()) {
-                case "calc":
-                    handleCalculation(method, queryString);
-                    break;
-                case "history":
-                    handleHistory();
-                    break;
-                case "clear":
-                    handleClear();
-                    break;
-                case "clearselected":
-                    handleClearSelected(queryString);
-                    break;
-                default:
-                    httpSender.sendBadRequest("Unknown action: " + action);
+            String path = (requestUri == null ? "/calculate" : requestUri).toLowerCase();
+            if (path.equals("/calculate")) {
+                handleCalculation();
+            } else if (path.equals("/calculate/circle")) {
+                handleShape("circle");
+            } else if (path.equals("/calculate/rectangle")) {
+                handleShape("rectangle");
+            } else if (path.equals("/calculate/triangle")) {
+                handleShape("triangle");
+            } else {
+                httpSender.sendBadRequest("Unknown path: " + path);
             }
         } catch (IllegalArgumentException e) {
             httpSender.sendBadRequest(e.getMessage());
@@ -60,14 +51,20 @@ public class ResponseSender { // данген мастер в мире обра�
         }
     }
 
-    private void handleCalculation(String method, String queryString) {
-        if (!"POST".equalsIgnoreCase(method)) {
-            httpSender.sendMethodNotAllowed("Only POST is allowed for calc. Received: " + method);
-            return;
-        }
+    private String readBody() throws Exception {
+        FCGIInterface.request.inStream.fill();
+        int len = FCGIInterface.request.inStream.available();
+        if (len <= 0) return "";
+        byte[] buf = new byte[len];
+        int read = FCGIInterface.request.inStream.read(buf, 0, len);
+        if (read <= 0) return "";
+        return new String(buf, java.nio.charset.StandardCharsets.UTF_8);
+    }
 
+    private void handleCalculation() throws Exception {
         long t0 = System.nanoTime();
-        BigDecimal[] data = parser.getBigDecimals(queryString);
+        String body = readBody();
+        BigDecimal[] data = parser.getBigDecimals(body);
         Map<String, Object> result = pointService.checkPoint(
                 data[0], data[1], data[2], parser.getOriginalYString()
         );
@@ -78,19 +75,18 @@ public class ResponseSender { // данген мастер в мире обра�
         httpSender.sendOkResponse(result);
     }
 
-    private void handleHistory() {
-        String historyJson = pointService.getHistory();
-        httpSender.sendRawJsonResponse(historyJson, 200, "OK");
+    private void handleShape(String shape) throws Exception {
+        long t0 = System.nanoTime();
+        String body = readBody();
+        BigDecimal[] data = parser.getBigDecimals(body);
+        Map<String, Object> result = pointService.checkPointForShape(
+                data[0], data[1], data[2], shape, parser.getOriginalYString()
+        );
+        long t1 = System.nanoTime();
+        double serverTotalMs = (t1 - t0) / 1_000_000.0;
+        result.put("serverTotalMs", String.format(java.util.Locale.US, "%.3f", serverTotalMs));
+        httpSender.sendOkResponse(result);
     }
 
-    private void handleClear() {
-        pointService.clearHistory();
-        httpSender.sendOkResponse(Map.of("success", true));
-    }
-
-    private void handleClearSelected(String queryString) {
-        String ids = paramExtractor.getParameter(queryString, "ids");
-        pointService.clearSelectedHistory(ids);
-        httpSender.sendOkResponse(Map.of("success", true));
-    }
+    
 }

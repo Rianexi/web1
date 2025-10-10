@@ -114,12 +114,13 @@ function handleSubmit(e) { // обработчик отправки формы
     if (!validateY() || !yInput) return showToast('Введите корректное значение Y', 'error');
     if (selectedR === null) return showToast('Выберите значение R', 'error');
 
-    const url = `/fcgi-bin/labwork1.jar?action=calc&x=${encodeURIComponent(selectedX)}&y=${encodeURIComponent(yInput)}&r=${encodeURIComponent(selectedR)}`;
+    const url = `/calculate`;
     const startTime = performance.now();
 
     fetch(url, { // отправка пост запроса серверу
         method: 'POST',
-        headers: { 'Accept': 'application/json' }
+        headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
+        body: JSON.stringify({ x: selectedX, y: yInput, r: selectedR })
     })
         .then(async (response) => {
             const duration = (performance.now() - startTime).toFixed(2);
@@ -179,12 +180,13 @@ function handleCanvasClick(e) { // омагад можно тыкать по г�
 }
 
 function loadHistory() {
-    fetch('/fcgi-bin/labwork1.jar?action=history', { // пост запрос для истории
-        method: 'POST',
-        headers: { 'Accept': 'application/json' }
-    })
-        .then(response => response.json())
-        .then(items => {
+    // История теперь читается с cookie на клиенте, поэтому запрос к серверу не нужен
+    try {
+        const cookies = document.cookie.split(';').map(x => x.trim());
+        const historyCookie = cookies.find(c => c.startsWith('history='));
+        if (historyCookie) {
+            const raw = decodeURIComponent(historyCookie.split('=')[1]);
+            const items = JSON.parse(raw);
             if (Array.isArray(items)) {
                 items.forEach(item => addResultRow({
                     x: item.x,
@@ -195,23 +197,18 @@ function loadHistory() {
                     duration: item.timeMs ? `${item.timeMs} ms` : ''
                 }));
             }
-        })
-        .catch(() => {});
+        }
+    } catch {}
+    return;
 }
 
 function clearAllResults() {
     showConfirmDialog('Очистить всю таблицу результатов?', () => {
-        fetch('/fcgi-bin/labwork1.jar?action=clear', { method: 'POST' })
-            .then(() => {
-                document.getElementById('resultsBody').innerHTML = '';
-                drawCoordinatePlane();
-                showToast('Таблица очищена', 'success');
-            })
-            .catch(() => {
-                document.getElementById('resultsBody').innerHTML = '';
-                drawCoordinatePlane();
-                showToast('Таблица очищена (локально)', 'success');
-            });
+        // локально очищаем cookie history
+        document.cookie = 'history=[]; Path=/; Max-Age=2592000; SameSite=Lax';
+        document.getElementById('resultsBody').innerHTML = '';
+        drawCoordinatePlane();
+        showToast('Таблица очищена', 'success');
     });
 }
 
@@ -226,17 +223,24 @@ function clearSelectedResults() {
             selectedIds.push(Array.from(row.parentNode.children).indexOf(row));
         });
 
-        fetch(`/fcgi-bin/labwork1.jar?action=clearSelected&ids=${selectedIds.join(',')}`, { method: 'POST' })
-            .then(() => {
-                checkboxes.forEach(checkbox => checkbox.closest('tr').remove());
-                drawCoordinatePlane();
-                showToast('Выбранные результаты удалены', 'success');
-            })
-            .catch(() => {
-                checkboxes.forEach(checkbox => checkbox.closest('tr').remove());
-                drawCoordinatePlane();
-                showToast('Выбранные результаты удалены (локально)', 'success');
-            });
+        // локально удаляем выбранные строки и переписываем cookie history
+        try {
+            const cookies = document.cookie.split(';').map(x => x.trim());
+            const historyCookie = cookies.find(c => c.startsWith('history='));
+            if (historyCookie) {
+                const raw = decodeURIComponent(historyCookie.split('=')[1]);
+                let items = JSON.parse(raw);
+                if (Array.isArray(items)) {
+                    const toDelete = new Set(selectedIds.map(Number));
+                    const filtered = items.filter((_, idx) => !toDelete.has(idx));
+                    document.cookie = 'history=' + encodeURIComponent(JSON.stringify(filtered)) + '; Path=/; Max-Age=2592000; SameSite=Lax';
+                }
+            }
+        } catch {}
+
+        checkboxes.forEach(checkbox => checkbox.closest('tr').remove());
+        drawCoordinatePlane();
+        showToast('Выбранные результаты удалены', 'success');
     });
 }
 

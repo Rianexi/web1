@@ -48,6 +48,44 @@ public class PointService { // зависимости
         return result;
     }
 
+    public Map<String, Object> checkPointForShape(BigDecimal x, BigDecimal y, BigDecimal r, String shape, String originalYString) {
+        long startTime = System.nanoTime();
+
+        checker.validate(x, y, r);
+        boolean hit;
+        switch (shape == null ? "" : shape.toLowerCase()) {
+            case "circle":
+                hit = checker.isHitCircle(x, y, r);
+                break;
+            case "rectangle":
+                hit = checker.isHitRectangle(x, y, r);
+                break;
+            case "triangle":
+                hit = checker.isHitTriangle(x, y, r);
+                break;
+            default:
+                throw new IllegalArgumentException("Unknown shape: " + shape);
+        }
+
+        long endTime = System.nanoTime();
+        double scriptTimeMsPrecise = (endTime - startTime) / 1_000_000.0;
+
+        Map<String, Object> result = new LinkedHashMap<>();
+        result.put("x", x);
+        result.put("y", originalYString != null ? originalYString : y.toString());
+        result.put("r", r);
+        result.put("result", hit);
+        result.put("shape", shape);
+        result.put("now", dateFormat.format(new Date()));
+        result.put("timeMs", String.format(java.util.Locale.US, "%.2f", scriptTimeMsPrecise));
+        result.put("time", (endTime - startTime));
+
+        // не сохраняем в историю для shape-эндпоинтов
+        httpSender.addCookie("lastTimeMs", String.format(java.util.Locale.US, "%.3f", scriptTimeMsPrecise), "Path=/; Max-Age=86400; SameSite=Lax");
+
+        return result;
+    }
+
     private void saveToHistory(Map<String, Object> result) {
         List<String> history = historyRepo.readObjects();
         Map<String, Object> historyItem = new LinkedHashMap<>(result);
@@ -57,8 +95,8 @@ public class PointService { // зависимости
             history = new ArrayList<>(history.subList(0, historyLimit));
         }
         String json = stringifyHistory(history);
-        // записываем историю в cookie
-        httpSender.addCookie("history", json, "Path=/; HttpOnly; Max-Age=2592000; SameSite=Lax");
+        // записываем историю в cookie (доступно фронту)
+        httpSender.addCookie("history", json, "Path=/; Max-Age=2592000; SameSite=Lax");
     }
 
     public String getHistory() {
@@ -66,7 +104,7 @@ public class PointService { // зависимости
     }
 
     public void clearHistory() {
-        httpSender.addCookie("history", "[]", "Path=/; HttpOnly; Max-Age=2592000; SameSite=Lax");
+        httpSender.addCookie("history", "[]", "Path=/; Max-Age=2592000; SameSite=Lax");
     }
 
     public void clearSelectedHistory(String ids) {
@@ -91,7 +129,7 @@ public class PointService { // зависимости
         }
 
         String json = stringifyHistory(history);
-        httpSender.addCookie("history", json, "Path=/; HttpOnly; Max-Age=2592000; SameSite=Lax");
+        httpSender.addCookie("history", json, "Path=/; Max-Age=2592000; SameSite=Lax");
     }
 
     private String stringifyHistory(List<String> objects) {
