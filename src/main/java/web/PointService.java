@@ -10,13 +10,15 @@ public class PointService { // зависимости
     private final JsonSerializer jsonSerializer;
     private final SimpleDateFormat dateFormat;
     private final int historyLimit;
+    private final HttpResponseSender httpSender;
 
-    public PointService(Checker checker, HistoryRepository historyRepo, JsonSerializer jsonSerializer, int historyLimit) {
+    public PointService(Checker checker, HistoryRepository historyRepo, JsonSerializer jsonSerializer, int historyLimit, HttpResponseSender httpSender) {
         this.checker = checker; // принятие зависимостей
         this.historyRepo = historyRepo;
         this.jsonSerializer = jsonSerializer;
         this.dateFormat = new SimpleDateFormat("dd.MM.yyyy HH:mm:ss");
         this.historyLimit = historyLimit;
+        this.httpSender = httpSender;
     }
    // главная проверка точки
     public Map<String, Object> checkPoint(BigDecimal x, BigDecimal y, BigDecimal r, String originalYString) {
@@ -27,7 +29,7 @@ public class PointService { // зависимости
 
         long endTime = System.nanoTime();
         long scriptTimeNs = endTime - startTime;
-        long scriptTimeMs = Math.max(0, scriptTimeNs / 1_000_000);
+        double scriptTimeMsPrecise = scriptTimeNs / 1_000_000.0; // реальное время в мс с долями
 
         Map<String, Object> result = new LinkedHashMap<>();
         result.put("x", x);
@@ -35,10 +37,13 @@ public class PointService { // зависимости
         result.put("r", r);
         result.put("result", hit);
         result.put("now", dateFormat.format(new Date()));
-        result.put("timeMs", scriptTimeMs);
+        result.put("timeMs", String.format(java.util.Locale.US, "%.2f", scriptTimeMsPrecise));
         result.put("time", scriptTimeNs);
 
         saveToHistory(result);
+        // сохраняем время выполнения в cookie, чтобы переживало обновление страницы
+        String preciseMs = String.format(java.util.Locale.US, "%.3f", scriptTimeMsPrecise);
+        httpSender.addCookie("lastTimeMs", preciseMs, "Path=/; Max-Age=86400; SameSite=Lax");
 
         return result;
     }
@@ -51,7 +56,9 @@ public class PointService { // зависимости
         if (history.size() > historyLimit) {
             history = new ArrayList<>(history.subList(0, historyLimit));
         }
-        historyRepo.writeObjects(history);
+        String json = stringifyHistory(history);
+        // записываем историю в cookie
+        httpSender.addCookie("history", json, "Path=/; HttpOnly; Max-Age=2592000; SameSite=Lax");
     }
 
     public String getHistory() {
@@ -59,7 +66,7 @@ public class PointService { // зависимости
     }
 
     public void clearHistory() {
-        historyRepo.writeJsonArray("[]");
+        httpSender.addCookie("history", "[]", "Path=/; HttpOnly; Max-Age=2592000; SameSite=Lax");
     }
 
     public void clearSelectedHistory(String ids) {
@@ -83,6 +90,18 @@ public class PointService { // зависимости
             history.remove(idx);
         }
 
-        historyRepo.writeObjects(history);
+        String json = stringifyHistory(history);
+        httpSender.addCookie("history", json, "Path=/; HttpOnly; Max-Age=2592000; SameSite=Lax");
+    }
+
+    private String stringifyHistory(List<String> objects) {
+        StringBuilder sb = new StringBuilder();
+        sb.append('[');
+        for (int i = 0; i < objects.size(); i++) {
+            if (i > 0) sb.append(',');
+            sb.append(objects.get(i));
+        }
+        sb.append(']');
+        return sb.toString();
     }
 }

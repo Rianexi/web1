@@ -2,13 +2,29 @@ package web;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.net.URLEncoder;
 import java.util.Map;
+import java.util.ArrayList;
+import java.util.List;
 
 public class HttpResponseSender {
     private final JsonSerializer jsonSerializer;
+    private final List<String> setCookieHeaders = new ArrayList<>();
 
     public HttpResponseSender(JsonSerializer jsonSerializer) {
         this.jsonSerializer = jsonSerializer;
+    }
+
+    public void addCookie(String name, String value, String attributes) { // добавление Set-Cookie для ответа
+        if (name == null || name.isEmpty()) return;
+        String encodedValue;
+        try {
+            encodedValue = URLEncoder.encode(value == null ? "" : value, StandardCharsets.UTF_8);
+        } catch (Exception e) {
+            encodedValue = value == null ? "" : value;
+        }
+        String attr = (attributes == null || attributes.isEmpty()) ? "" : "; " + attributes;
+        setCookieHeaders.add(name + "=" + encodedValue + attr);
     }
 
     public void sendJsonResponse(Map<String, Object> data, int statusCode, String statusText) {
@@ -17,11 +33,17 @@ public class HttpResponseSender {
     }
 
     public void sendRawJsonResponse(String json, int statusCode, String statusText) { // отправка готового джсон строки с заголовками
-        String response = String.format(
-                "Status: %d %s\r\nContent-Type: application/json; charset=utf-8\r\nAccess-Control-Allow-Origin: *\r\nContent-Length: %d\r\n\r\n%s",
-                statusCode, statusText, json.getBytes(StandardCharsets.UTF_8).length, json
-        );
-        writeResponse(response);
+        StringBuilder headers = new StringBuilder();
+        headers.append(String.format("Status: %d %s\r\n", statusCode, statusText));
+        headers.append("Content-Type: application/json; charset=utf-8\r\n");
+        headers.append("Access-Control-Allow-Origin: *\r\n");
+        for (String cookie : setCookieHeaders) {
+            headers.append("Set-Cookie: ").append(cookie).append("\r\n");
+        }
+        headers.append(String.format("Content-Length: %d\r\n\r\n", json.getBytes(StandardCharsets.UTF_8).length));
+        headers.append(json);
+        writeResponse(headers.toString());
+        setCookieHeaders.clear();
     }
 
     public void sendOkResponse(Map<String, Object> data) {

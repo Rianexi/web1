@@ -14,11 +14,11 @@ public class ResponseSender { // данген мастер в мире обра�
         this.parser = new JsonParser();
 
         Checker checker = new Checker();
-        HistoryRepository historyRepo = new HistoryRepository(config.getHistoryFile());
+        HistoryRepository historyRepo = new HistoryRepository();
         JsonSerializer jsonSerializer = new JsonSerializer();
 
-        this.pointService = new PointService(checker, historyRepo, jsonSerializer, config.getHistoryLimit());
         this.httpSender = new HttpResponseSender(jsonSerializer);
+        this.pointService = new PointService(checker, historyRepo, jsonSerializer, config.getHistoryLimit(), this.httpSender);
         this.paramExtractor = new QueryParameterExtractor();
     }
 
@@ -66,10 +66,14 @@ public class ResponseSender { // данген мастер в мире обра�
             return;
         }
 
+        long t0 = System.nanoTime();
         BigDecimal[] data = parser.getBigDecimals(queryString);
         Map<String, Object> result = pointService.checkPoint(
                 data[0], data[1], data[2], parser.getOriginalYString()
         );
+        long t1 = System.nanoTime();
+        double serverTotalMs = (t1 - t0) / 1_000_000.0;
+        result.put("serverTotalMs", String.format(java.util.Locale.US, "%.3f", serverTotalMs));
 
         httpSender.sendOkResponse(result);
     }

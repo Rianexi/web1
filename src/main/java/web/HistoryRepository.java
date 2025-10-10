@@ -1,42 +1,50 @@
 package web;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
+import com.fastcgi.FCGIInterface;
+import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Properties;
 
 public class HistoryRepository {
-    private final String historyFilePath;
+    private final String cookieName;
 
-    public HistoryRepository(String historyFilePath) {
-        this.historyFilePath = historyFilePath;
+    public HistoryRepository() {
+        this.cookieName = "history"; // храним историю только в cookie
     }
 
-    public String readJsonArray() { // метод для чтения json массива
+    public String readJsonArray() { // читаем историю из Cookie
         try {
-            File f = new File(historyFilePath);
-            if (!f.exists()) return "[]";
-            try (FileInputStream in = new FileInputStream(f)) {
-                byte[] data = in.readAllBytes();
-                String s = new String(data, StandardCharsets.UTF_8).trim();
-                if (s.isEmpty()) return "[]";
-                return s;
+            Properties props = FCGIInterface.request.params;
+            String cookieHeader = props.getProperty("HTTP_COOKIE");
+            if (cookieHeader == null || cookieHeader.isEmpty()) return "[]";
+            String[] cookies = cookieHeader.split(";\\s*");
+            for (String c : cookies) {
+                int idx = c.indexOf('=');
+                if (idx <= 0) continue;
+                String name = c.substring(0, idx).trim();
+                String value = c.substring(idx + 1).trim();
+                if (cookieName.equals(name)) {
+                    try {
+                        String decoded = URLDecoder.decode(value, StandardCharsets.UTF_8);
+                        String s = decoded.trim();
+                        if (s.isEmpty()) return "[]";
+                        if (s.charAt(0) == '[' && s.charAt(s.length()-1) == ']') return s;
+                        return "[]";
+                    } catch (Exception e) {
+                        return "[]";
+                    }
+                }
             }
-        } catch (IOException e) {
+            return "[]";
+        } catch (Exception e) {
             return "[]";
         }
     }
 
     public void writeJsonArray(String json) {
-        try {
-            try (FileOutputStream out = new FileOutputStream(new File(historyFilePath))) {
-                out.write(json.getBytes(StandardCharsets.UTF_8));
-            }
-        } catch (IOException e) {
-        }
+        // запись cookie производится в PointService через HttpResponseSender.addCookie
     }
 
     public List<String> readObjects() { // парсинг json массива для лута обьектов
