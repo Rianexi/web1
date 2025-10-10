@@ -11,10 +11,10 @@ public class HistoryRepository {
     private final String cookieName;
 
     public HistoryRepository() {
-        this.cookieName = "history"; // храним историю только в cookie
+        this.cookieName = "history";
     }
 
-    public String readJsonArray() { // читаем историю из Cookie
+    public String readJsonArray() { // читаем историю из печенек
         try {
             Properties props = FCGIInterface.request.params;
             String cookieHeader = props.getProperty("HTTP_COOKIE");
@@ -44,7 +44,6 @@ public class HistoryRepository {
     }
 
     public void writeJsonArray(String json) {
-        // запись cookie производится в PointService через HttpResponseSender.addCookie
     }
 
     public List<String> readObjects() { // парсинг json массива для лута обьектов

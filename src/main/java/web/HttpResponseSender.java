@@ -15,7 +15,7 @@ public class HttpResponseSender {
         this.jsonSerializer = jsonSerializer;
     }
 
-    public void addCookie(String name, String value, String attributes) { // добавление Set-Cookie для ответа
+    public void addCookie(String name, String value, String attributes) {
         if (name == null || name.isEmpty()) return;
         String encodedValue;
         try {

@@ -141,7 +141,7 @@ function handleSubmit(e) { // обработчик отправки формы
                 r: selectedR,
                 hit: Boolean(data.result),
                 time: data.now || new Date().toLocaleString(),
-                duration: data.timeMs ? `${data.timeMs} ms` : `${duration} ms`
+                duration: (data.serverTotalMs ? `${data.serverTotalMs} ms` : (data.timeMs ? `${data.timeMs} ms` : `${duration} ms`))
             });
 
             drawCoordinatePlane();
@@ -180,7 +180,6 @@ function handleCanvasClick(e) { // омагад можно тыкать по г�
 }
 
 function loadHistory() {
-    // История теперь читается с cookie на клиенте, поэтому запрос к серверу не нужен
     try {
         const cookies = document.cookie.split(';').map(x => x.trim());
         const historyCookie = cookies.find(c => c.startsWith('history='));
@@ -223,7 +222,6 @@ function clearSelectedResults() {
             selectedIds.push(Array.from(row.parentNode.children).indexOf(row));
         });
 
-        // локально удаляем выбранные строки и переписываем cookie history
         try {
             const cookies = document.cookie.split(';').map(x => x.trim());
             const historyCookie = cookies.find(c => c.startsWith('history='));

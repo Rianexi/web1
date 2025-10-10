@@ -41,7 +41,6 @@ public class PointService { // зависимости
         result.put("time", scriptTimeNs);
 
         saveToHistory(result);
-        // сохраняем время выполнения в cookie, чтобы переживало обновление страницы
         String preciseMs = String.format(java.util.Locale.US, "%.3f", scriptTimeMsPrecise);
         httpSender.addCookie("lastTimeMs", preciseMs, "Path=/; Max-Age=86400; SameSite=Lax");
 
@@ -80,7 +79,6 @@ public class PointService { // зависимости
         result.put("timeMs", String.format(java.util.Locale.US, "%.2f", scriptTimeMsPrecise));
         result.put("time", (endTime - startTime));
 
-        // не сохраняем в историю для shape-эндпоинтов
         httpSender.addCookie("lastTimeMs", String.format(java.util.Locale.US, "%.3f", scriptTimeMsPrecise), "Path=/; Max-Age=86400; SameSite=Lax");
 
         return result;
@@ -95,7 +93,6 @@ public class PointService { // зависимости
             history = new ArrayList<>(history.subList(0, historyLimit));
         }
         String json = stringifyHistory(history);
-        // записываем историю в cookie (доступно фронту)
         httpSender.addCookie("history", json, "Path=/; Max-Age=2592000; SameSite=Lax");
     }
 
