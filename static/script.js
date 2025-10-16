@@ -1,28 +1,31 @@
 let selectedX = null;
 let selectedR = null;
 
-document.addEventListener('DOMContentLoaded', function() { // событие DOM после хтмл
+document.addEventListener('DOMContentLoaded', function() {
     initializeTheme();
     initializeEventListeners();
     drawCoordinatePlane();
     loadHistory();
 });
 
-function initializeTheme() { // инициализация всего с темами + сохранение в браузер(мб убрать хз)
+function initializeTheme() {
     const themeToggle = document.getElementById('themeToggle');
-    const savedTheme = localStorage.getItem('theme') || 'dark';
+    const savedTheme = getCookie('theme') || 'dark';
     document.documentElement.setAttribute('data-theme', savedTheme);
+
+    themeToggle.textContent = savedTheme === 'dark' ? '☀️' : '🌙';
 
     themeToggle.addEventListener('click', function() {
         const currentTheme = document.documentElement.getAttribute('data-theme');
         const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
         document.documentElement.setAttribute('data-theme', newTheme);
-        localStorage.setItem('theme', newTheme);
+        setCookie('theme', newTheme);
+        themeToggle.textContent = newTheme === 'dark' ? '☀️' : '🌙';
         setTimeout(() => drawCoordinatePlane(), 150);
     });
 }
 
-function initializeEventListeners() { // основная хрень обработчик событий
+function initializeEventListeners() {
     document.querySelectorAll('.x-btn').forEach(btn => {
         btn.addEventListener('click', function() {
             selectX(this.dataset.value);
@@ -34,9 +37,9 @@ function initializeEventListeners() { // основная хрень обраб�
             selectedR = parseFloat(this.value);
             updateCurrentPoint();
             drawCoordinatePlane();
-        }); // радиокнопки для RRRRR
+        });
     });
-    // обработчики для значений и тд в ирл
+
     document.getElementById('y-input').addEventListener('input', validateY);
     document.getElementById('pointForm').addEventListener('submit', handleSubmit);
     document.getElementById('coordinatePlane').addEventListener('click', handleCanvasClick);
@@ -85,45 +88,52 @@ function validateY() {
     return true;
 }
 
-function truncateNumber(value, maxLength = 8) { // для убирания 1.999999
-    const str = String(value);
-    return str.length <= maxLength ? str : str.substring(0, maxLength) + '...';
-}
-
-function updateCurrentPoint() { // обновление текущий параметров
+function updateCurrentPoint() {
     const yValue = document.getElementById('y-input').value;
     const pointDisplay = document.getElementById('currentPoint');
 
-    const displayX = selectedX !== null ? truncateNumber(selectedX) : '—';
-    const displayY = yValue ? truncateNumber(yValue) : '—';
-    const displayR = selectedR !== null ? truncateNumber(selectedR) : '—';
+    const displayX = selectedX !== null ? selectedX : '—';
+    const displayY = yValue !== '' ? parseFloat(yValue) : '—';
+    const displayR = selectedR !== null ? selectedR : '—';
 
-    const displayText = `X: ${displayX}   Y: ${displayY}   R: ${displayR}`;
-    const fullText = `X: ${selectedX ?? '—'}   Y: ${yValue || '—'}   R: ${selectedR ?? '—'}`;
-
-    pointDisplay.textContent = displayText;
-    pointDisplay.title = fullText;
+    pointDisplay.textContent = `X: ${displayX}   Y: ${displayY}   R: ${displayR}`;
 }
 
-function handleSubmit(e) { // обработчик отправки формы
+function handleSubmit(e) {
     e.preventDefault();
 
     const yInput = document.getElementById('y-input').value.trim();
 
-    if (selectedX === null) return showToast('Выберите значение X', 'error');
-    if (!validateY() || !yInput) return showToast('Введите корректное значение Y', 'error');
-    if (selectedR === null) return showToast('Выберите значение R', 'error');
+    if (selectedX === null) {
+        alert('Выберите значение X');
+        return;
+    }
+    if (!validateY() || !yInput) {
+        alert('Введите корректное значение Y');
+        return;
+    }
+    if (selectedR === null) {
+        alert('Выберите значение R');
+        return;
+    }
 
     const url = `/calculate`;
     const startTime = performance.now();
 
-    fetch(url, { // отправка пост запроса серверу
+    fetch(url, {
         method: 'POST',
-        headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
-        body: JSON.stringify({ x: selectedX, y: yInput, r: selectedR })
+        headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            x: selectedX,
+            y: yInput,
+            r: selectedR
+        })
     })
         .then(async (response) => {
-            const duration = (performance.now() - startTime).toFixed(2);
+            const duration = (performance.now() - startTime).toFixed(3);
             let data;
             try {
                 data = await response.json();
@@ -141,19 +151,85 @@ function handleSubmit(e) { // обработчик отправки формы
                 r: selectedR,
                 hit: Boolean(data.result),
                 time: data.now || new Date().toLocaleString(),
-                duration: (data.serverTotalMs ? `${data.serverTotalMs} ms` : (data.timeMs ? `${data.timeMs} ms` : `${duration} ms`))
-            });
+                duration: data.serverTotalMs ? `${data.serverTotalMs} ms` : `${duration} ms`
+            }, true); // true = сохранить в cookies
 
             drawCoordinatePlane();
-            showToast('Результат добавлен', 'success');
+            console.log('Результат добавлен');
         })
         .catch(error => {
-            showToast(`Ошибка: ${error.message}`, 'error');
+            alert(`Ошибка: ${error.message}`);
         });
 }
 
-function handleCanvasClick(e) { // омагад можно тыкать по графику (починить по возможности)
-    if (!selectedR) return showToast('Сначала выберите значение R', 'error');
+function addResultRow(result, saveToCookies = false) {
+    const resultsDiv = document.getElementById('results');
+    const resultRow = document.createElement('div');
+    resultRow.className = `result-row ${result.hit ? 'hit' : 'miss'}`;
+
+    resultRow.innerHTML = `
+        <input type="checkbox" class="result-checkbox">
+        <div>X: ${result.x}</div>
+        <div>Y: ${result.y}</div>
+        <div>R: ${result.r}</div>
+        <div>${result.hit ? 'Попадание' : 'Промах'}</div>
+        <div>${result.time}</div>
+        <div>${result.duration}</div>
+    `;
+
+    resultsDiv.insertBefore(resultRow, resultsDiv.firstChild);
+
+    // Сохранить в cookies только если флаг установлен
+    if (saveToCookies) {
+        const results = getResults();
+        results.unshift(result);
+        if (results.length > 100) {
+            results.splice(100);
+        }
+        setResults(results);
+    }
+}
+
+function loadHistory() {
+    const results = getResults();
+    results.reverse().forEach(result => addResultRow(result, false)); // false = НЕ сохранять в cookies
+}
+
+function clearAllResults() {
+    document.getElementById('results').innerHTML = '';
+    setResults([]);
+    drawCoordinatePlane();
+}
+
+function clearSelectedResults() {
+    const checkboxes = document.querySelectorAll('.result-checkbox:checked');
+    checkboxes.forEach(checkbox => {
+        checkbox.closest('.result-row').remove();
+    });
+
+    const remainingResults = [];
+    document.querySelectorAll('.result-row').forEach(row => {
+        const cells = row.querySelectorAll('div');
+        if (cells.length >= 6) {
+            remainingResults.push({
+                x: parseFloat(cells[0].textContent.split(': ')[1]),
+                y: parseFloat(cells[1].textContent.split(': ')[1]),
+                r: parseFloat(cells[2].textContent.split(': ')[1]),
+                hit: cells[3].textContent === 'Попадание',
+                time: cells[4].textContent,
+                duration: cells[5].textContent
+            });
+        }
+    });
+    setResults(remainingResults);
+    drawCoordinatePlane();
+}
+
+function handleCanvasClick(e) {
+    if (!selectedR) {
+        alert('Сначала выберите значение R');
+        return;
+    }
 
     const canvas = e.target;
     const rect = canvas.getBoundingClientRect();
@@ -164,85 +240,23 @@ function handleCanvasClick(e) { // омагад можно тыкать по г�
     const clickX = e.clientX - rect.left;
     const clickY = e.clientY - rect.top;
 
-    const x = (clickX - centerX) / scale;
-    const y = (centerY - clickY) / scale;
+    const mathX = (clickX - centerX) / scale;
+    const mathY = (centerY - clickY) / scale;
 
-    const validX = [-3, -2, -1, 0, 1, 2, 3, 4, 5];
-    const nearestX = validX.reduce((prev, curr) => // ищу близжайший Х мб фикс
-        Math.abs(curr - x) < Math.abs(prev - x) ? curr : prev
-    );
+    const roundedX = Math.round(mathX * 10) / 10;
+    const roundedY = Math.round(mathY * 10) / 10;
 
-    if (y >= -5 && y <= 5) {
-        selectX(nearestX.toString());
-        document.getElementById('y-input').value = y.toFixed(2);
-        validateY();
+    if (roundedX < -5 || roundedX > 5 || roundedY < -5 || roundedY > 5) {
+        alert('Координаты должны быть в пределах от -5 до 5');
+        return;
     }
+
+    document.getElementById('y-input').value = roundedY;
+    selectX(roundedX.toString());
+    validateY();
 }
 
-function loadHistory() {
-    try {
-        const cookies = document.cookie.split(';').map(x => x.trim());
-        const historyCookie = cookies.find(c => c.startsWith('history='));
-        if (historyCookie) {
-            const raw = decodeURIComponent(historyCookie.split('=')[1]);
-            const items = JSON.parse(raw);
-            if (Array.isArray(items)) {
-                items.forEach(item => addResultRow({
-                    x: item.x,
-                    y: String(item.y),
-                    r: item.r,
-                    hit: Boolean(item.result),
-                    time: item.now,
-                    duration: item.timeMs ? `${item.timeMs} ms` : ''
-                }));
-            }
-        }
-    } catch {}
-    return;
-}
-
-function clearAllResults() {
-    showConfirmDialog('Очистить всю таблицу результатов?', () => {
-        // локально очищаем cookie history
-        document.cookie = 'history=[]; Path=/; Max-Age=2592000; SameSite=Lax';
-        document.getElementById('resultsBody').innerHTML = '';
-        drawCoordinatePlane();
-        showToast('Таблица очищена', 'success');
-    });
-}
-
-function clearSelectedResults() {
-    const checkboxes = document.querySelectorAll('.result-checkbox:checked');
-    if (checkboxes.length === 0) return showToast('Выберите результаты для удаления', 'error');
-
-    showConfirmDialog(`Удалить ${checkboxes.length} выбранных результатов?`, () => {
-        const selectedIds = [];
-        checkboxes.forEach(checkbox => {
-            const row = checkbox.closest('tr');
-            selectedIds.push(Array.from(row.parentNode.children).indexOf(row));
-        });
-
-        try {
-            const cookies = document.cookie.split(';').map(x => x.trim());
-            const historyCookie = cookies.find(c => c.startsWith('history='));
-            if (historyCookie) {
-                const raw = decodeURIComponent(historyCookie.split('=')[1]);
-                let items = JSON.parse(raw);
-                if (Array.isArray(items)) {
-                    const toDelete = new Set(selectedIds.map(Number));
-                    const filtered = items.filter((_, idx) => !toDelete.has(idx));
-                    document.cookie = 'history=' + encodeURIComponent(JSON.stringify(filtered)) + '; Path=/; Max-Age=2592000; SameSite=Lax';
-                }
-            }
-        } catch {}
-
-        checkboxes.forEach(checkbox => checkbox.closest('tr').remove());
-        drawCoordinatePlane();
-        showToast('Выбранные результаты удалены', 'success');
-    });
-}
-
-function drawCoordinatePlane() { // рисовалка графика
+function drawCoordinatePlane() {
     const canvas = document.getElementById('coordinatePlane');
     const ctx = canvas.getContext('2d');
     const scale = 25;
@@ -314,7 +328,7 @@ function drawCoordinatePlane() { // рисовалка графика
     ctx.stroke();
 
     ctx.fillStyle = isDark ? '#b0b0b0' : '#475569';
-    ctx.font = '12px JetBrains Mono';
+    ctx.font = '12px monospace';
     ctx.textAlign = 'center';
     for (let i = -6; i <= 6; i++) {
         if (i !== 0) {
@@ -323,74 +337,47 @@ function drawCoordinatePlane() { // рисовалка графика
         }
     }
 
-    ctx.fillStyle = isDark ? '#00d4ff' : '#3b82f6';
-    ctx.font = 'bold 14px JetBrains Mono';
-    ctx.fillText('X', canvas.width - 15, centerY - 10);
-    ctx.fillText('Y', centerX + 10, 15);
+    if (selectedR) {
+        const results = getResults().filter(result => Math.abs(result.r - selectedR) < 0.001);
+
+        results.forEach(result => {
+            const x = centerX + result.x * scale;
+            const y = centerY - result.y * scale;
+
+            if (x >= 0 && x <= canvas.width && y >= 0 && y <= canvas.height) {
+                ctx.fillStyle = result.hit ? '#00ff88' : '#ff4757';
+                ctx.beginPath();
+                ctx.arc(x, y, 4, 0, 2 * Math.PI);
+                ctx.fill();
+
+                ctx.strokeStyle = isDark ? '#000' : '#fff';
+                ctx.lineWidth = 1;
+                ctx.stroke();
+            }
+        });
+    }
 }
 
-function addResultRow(result) {
-    const tbody = document.getElementById('resultsBody');
-    const row = tbody.insertRow(0);
-    const hitColor = result.hit ? 'var(--success)' : 'var(--error)';
-    const hitText = result.hit ? 'Попадание' : 'Промах';
-
-    const displayX = truncateNumber(result.x, 6);
-    const displayY = truncateNumber(result.y, 8);
-    const displayR = truncateNumber(result.r, 6);
-    const displayTime = result.time.length > 15 ? result.time.substring(0, 12) + '...' : result.time;
-    const displayDuration = result.duration.length > 10 ? result.duration.substring(0, 7) + '...' : result.duration;
-
-    row.innerHTML = `
-        <td><input type="checkbox" class="result-checkbox"></td>
-        <td title="${result.x}">${displayX}</td>
-        <td title="${result.y}">${displayY}</td>
-        <td title="${result.r}">${displayR}</td>
-        <td style="color: ${hitColor}; font-weight: 600;" title="${hitText}">${hitText}</td>
-        <td title="${result.time}">${displayTime}</td>
-        <td title="${result.duration}">${displayDuration}</td>
-    `;
+// Утилиты для работы с cookies
+function setCookie(name, value) {
+    document.cookie = `${name}=${encodeURIComponent(value)}; Path=/; Max-Age=2592000; SameSite=Lax`;
 }
 
-function showToast(message, type = 'info') {
-    const toast = document.getElementById('toast');
-    toast.textContent = message;
-    toast.className = `toast ${type}`;
-    toast.classList.add('show');
-    setTimeout(() => toast.classList.remove('show'), 3000);
+function getCookie(name) {
+    const cookies = document.cookie.split(';').map(x => x.trim());
+    const cookie = cookies.find(c => c.startsWith(name + '='));
+    return cookie ? decodeURIComponent(cookie.split('=')[1]) : null;
 }
 
-function showConfirmDialog(message, onConfirm) {
-    const overlay = document.createElement('div');
-    overlay.className = 'confirm-overlay';
+function setResults(results) {
+    setCookie('results', JSON.stringify(results));
+}
 
-    const dialog = document.createElement('div');
-    dialog.className = 'confirm-dialog';
-
-    dialog.innerHTML = `
-        <div class="confirm-message">${message}</div>
-        <div class="confirm-buttons">
-            <button class="confirm-btn confirm-cancel">Отмена</button>
-            <button class="confirm-btn confirm-ok">Подтвердить</button>
-        </div>
-    `;
-
-    overlay.appendChild(dialog);
-    document.body.appendChild(overlay);
-
-    const cancelBtn = dialog.querySelector('.confirm-cancel');
-    const okBtn = dialog.querySelector('.confirm-ok');
-    const close = () => document.body.removeChild(overlay);
-
-    cancelBtn.addEventListener('click', close);
-    okBtn.addEventListener('click', () => {
-        close();
-        onConfirm();
-    });
-
-    overlay.addEventListener('click', (e) => {
-        if (e.target === overlay) close();
-    });
-
-    cancelBtn.focus();
+function getResults() {
+    const data = getCookie('results');
+    try {
+        return data ? JSON.parse(data) : [];
+    } catch {
+        return [];
+    }
 }

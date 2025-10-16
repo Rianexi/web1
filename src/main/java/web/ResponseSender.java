@@ -4,22 +4,17 @@ import com.fastcgi.FCGIInterface;
 import java.math.BigDecimal;
 import java.util.Map;
 
-public class ResponseSender { // данген мастер в мире обработки хттп
+public class ResponseSender {
     private final RequestParser parser;
     private final PointService pointService;
     private final HttpResponseSender httpSender;
-    
 
     public ResponseSender(Configuration config) {
         this.parser = new JsonParser();
 
         Checker checker = new Checker();
-        HistoryRepository historyRepo = new HistoryRepository();
-        JsonSerializer jsonSerializer = new JsonSerializer();
-
-        this.httpSender = new HttpResponseSender(jsonSerializer);
-        this.pointService = new PointService(checker, historyRepo, jsonSerializer, config.getHistoryLimit(), this.httpSender);
-        
+        this.httpSender = new HttpResponseSender();
+        this.pointService = new PointService(checker, this.httpSender);
     }
 
     public void sendResponse() {
@@ -87,6 +82,4 @@ public class ResponseSender { // данген мастер в мире обра�
         result.put("serverTotalMs", String.format(java.util.Locale.US, "%.3f", serverTotalMs));
         httpSender.sendOkResponse(result);
     }
-
-    
 }

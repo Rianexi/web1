@@ -4,37 +4,24 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Лабораторная работа №1</title>
-    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
 <div class="container">
     <header class="header">
-        <div class="header-content">
-            <div class="header-top">
-                <h1>Лабораторная работа №1</h1>
-                <button id="themeToggle" class="theme-toggle" aria-label="Переключить тему">
-                    <svg class="sun-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <circle cx="12" cy="12" r="5"/>
-                        <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
-                    </svg>
-                    <svg class="moon-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
-                    </svg>
-                </button>
-            </div>
-            <div class="student-info">
-                <span>ФИО: Пиляров Руслан Назирович</span>
-                <span>Группа: P3219</span>
-                <span>Вариант: 467088</span>
-            </div>
+        <h1>Лабораторная работа №1</h1>
+        <button id="themeToggle" class="theme-toggle">🌙</button>
+        <div class="student-info">
+            <span>ФИО: Пиляров Руслан Назирович</span>
+            <span>Группа: P3219</span>
+            <span>Вариант: 467088</span>
         </div>
     </header>
 
     <main class="main-content">
-        <section class="card parameters-card">
+        <section class="card">
             <h2>Параметры точки</h2>
-            <form id="pointForm" class="form">
+            <form id="pointForm">
                 <div class="input-group">
                     <label>Координата X:</label>
                     <div class="x-buttons">
@@ -48,104 +35,51 @@
                         <button type="button" class="x-btn" data-value="4">4</button>
                         <button type="button" class="x-btn" data-value="5">5</button>
                     </div>
-                    <input type="hidden" id="x-input" name="x" required>
+                    <input type="hidden" id="x-input" name="x">
                 </div>
 
                 <div class="input-group">
-                    <label for="y-input">Координата Y (-5 ... 5):</label>
-                    <input type="text" id="y-input" name="y" placeholder="Введите значение Y" required>
-                    <span class="error-message" id="y-error"></span>
+                    <label for="y-input">Координата Y (-5 до 5):</label>
+                    <input type="text" id="y-input" name="y" placeholder="Введите Y">
+                    <span id="y-error" class="error"></span>
                 </div>
 
                 <div class="input-group">
                     <label>Радиус R:</label>
-                    <div class="r-options">
-                        <label class="radio-option">
-                            <input type="radio" name="r" value="1">
-                            <span class="radio-mark"></span>
-                            <span>1</span>
-                        </label>
-                        <label class="radio-option">
-                            <input type="radio" name="r" value="1.5">
-                            <span class="radio-mark"></span>
-                            <span>1.5</span>
-                        </label>
-                        <label class="radio-option">
-                            <input type="radio" name="r" value="2">
-                            <span class="radio-mark"></span>
-                            <span>2</span>
-                        </label>
-                        <label class="radio-option">
-                            <input type="radio" name="r" value="2.5">
-                            <span class="radio-mark"></span>
-                            <span>2.5</span>
-                        </label>
-                        <label class="radio-option">
-                            <input type="radio" name="r" value="3">
-                            <span class="radio-mark"></span>
-                            <span>3</span>
-                        </label>
+                    <div class="r-buttons">
+                        <label><input type="radio" name="r" value="1"> 1</label>
+                        <label><input type="radio" name="r" value="1.5"> 1.5</label>
+                        <label><input type="radio" name="r" value="2"> 2</label>
+                        <label><input type="radio" name="r" value="2.5"> 2.5</label>
+                        <label><input type="radio" name="r" value="3"> 3</label>
                     </div>
                 </div>
 
-                <button type="submit" class="submit-btn">
-                    <span>Проверить точку</span>
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M5 12h14M12 5l7 7-7 7"/>
-                    </svg>
-                </button>
+                <div class="current-point">
+                    Текущая точка: <span id="currentPoint">X: —, Y: —, R: —</span>
+                </div>
+
+                <button type="submit" class="submit-btn">Проверить точку</button>
             </form>
         </section>
 
-        <section class="card graph-card">
+        <section class="card">
             <h2>График области</h2>
-            <div class="canvas-container">
-                <canvas id="coordinatePlane" width="350" height="350"></canvas>
+            <canvas id="coordinatePlane" width="400" height="400"></canvas>
+        </section>
+
+        <section class="card">
+            <h2>Результаты</h2>
+            <div class="results-controls">
+                <button id="clearAll" class="clear-btn">Очистить все</button>
+                <button id="clearSelected" class="clear-btn">Удалить выбранные</button>
+                <label><input type="checkbox" id="selectAll"> Выбрать все</label>
             </div>
-            <div class="current-point" id="currentPoint">X: — &nbsp;&nbsp; Y: — &nbsp;&nbsp; R: —</div>
+            <div id="results" class="results-table"></div>
         </section>
     </main>
-
-    <section class="card results-card">
-        <div class="results-header">
-            <h2>История результатов</h2>
-            <div class="control-buttons">
-                <button id="clearSelected" class="btn btn-warning">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M3 6h18M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6M8 6V4c0-1 1-2 2-2h4c0-1 1-2 2-2v2"/>
-                    </svg>
-                    Удалить выбранные
-                </button>
-                <button id="clearAll" class="btn btn-danger">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <circle cx="12" cy="12" r="10"/>
-                        <path d="M15 9l-6 6M9 9l6 6"/>
-                    </svg>
-                    Очистить всё
-                </button>
-            </div>
-        </div>
-
-        <div class="table-container">
-            <table class="results-table">
-                <thead>
-                <tr>
-                    <th><input type="checkbox" id="selectAll"></th>
-                    <th>X</th>
-                    <th>Y</th>
-                    <th>R</th>
-                    <th>Результат</th>
-                    <th>Время запроса</th>
-                    <th>Время выполнения</th>
-                </tr>
-                </thead>
-                <tbody id="resultsBody"></tbody>
-            </table>
-        </div>
-    </section>
 </div>
 
-<div id="toast" class="toast"></div>
 <script src="script.js"></script>
 </body>
 </html>

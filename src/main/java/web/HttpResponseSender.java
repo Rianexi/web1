@@ -2,69 +2,64 @@ package web;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.net.URLEncoder;
 import java.util.Map;
-import java.util.ArrayList;
-import java.util.List;
 
 public class HttpResponseSender {
-    private final JsonSerializer jsonSerializer;
-    private final List<String> setCookieHeaders = new ArrayList<>();
 
-    public HttpResponseSender(JsonSerializer jsonSerializer) {
-        this.jsonSerializer = jsonSerializer;
+    public void sendOkResponse(Map<String, Object> data) {
+        String json = mapToJson(data);
+        sendRawJsonResponse(json, 200, "OK");
     }
 
-    public void addCookie(String name, String value, String attributes) {
-        if (name == null || name.isEmpty()) return;
-        String encodedValue;
-        try {
-            encodedValue = URLEncoder.encode(value == null ? "" : value, StandardCharsets.UTF_8);
-        } catch (Exception e) {
-            encodedValue = value == null ? "" : value;
-        }
-        String attr = (attributes == null || attributes.isEmpty()) ? "" : "; " + attributes;
-        setCookieHeaders.add(name + "=" + encodedValue + attr);
+    public void sendBadRequest(String message) {
+        String json = "{\"reason\":\"" + escapeJson(message) + "\"}";
+        sendRawJsonResponse(json, 400, "Bad Request");
     }
 
-    public void sendJsonResponse(Map<String, Object> data, int statusCode, String statusText) {
-        String json = jsonSerializer.toJson(data);
-        sendRawJsonResponse(json, statusCode, statusText);
+    public void sendMethodNotAllowed(String message) {
+        String json = "{\"reason\":\"" + escapeJson(message) + "\"}";
+        sendRawJsonResponse(json, 405, "Method Not Allowed");
     }
 
-    public void sendRawJsonResponse(String json, int statusCode, String statusText) { // отправка готового джсон строки с заголовками
+    public void sendServerError(String message) {
+        String json = "{\"reason\":\"" + escapeJson(message) + "\"}";
+        sendRawJsonResponse(json, 500, "Internal Server Error");
+    }
+
+    private void sendRawJsonResponse(String json, int statusCode, String statusText) {
         StringBuilder headers = new StringBuilder();
         headers.append(String.format("Status: %d %s\r\n", statusCode, statusText));
         headers.append("Content-Type: application/json; charset=utf-8\r\n");
         headers.append("Access-Control-Allow-Origin: *\r\n");
-        for (String cookie : setCookieHeaders) {
-            headers.append("Set-Cookie: ").append(cookie).append("\r\n");
-        }
         headers.append(String.format("Content-Length: %d\r\n\r\n", json.getBytes(StandardCharsets.UTF_8).length));
         headers.append(json);
         writeResponse(headers.toString());
-        setCookieHeaders.clear();
     }
 
-    public void sendOkResponse(Map<String, Object> data) {
-        sendJsonResponse(data, 200, "OK");
+    private String mapToJson(Map<String, Object> map) {
+        StringBuilder json = new StringBuilder("{");
+        boolean first = true;
+        for (Map.Entry<String, Object> entry : map.entrySet()) {
+            if (!first) json.append(",");
+            json.append("\"").append(escapeJson(entry.getKey())).append("\":");
+            Object value = entry.getValue();
+            if (value == null) {
+                json.append("null");
+            } else if (value instanceof String) {
+                json.append("\"").append(escapeJson((String) value)).append("\"");
+            } else if (value instanceof Boolean) {
+                json.append(value.toString());
+            } else {
+                json.append("\"").append(escapeJson(value.toString())).append("\"");
+            }
+            first = false;
+        }
+        json.append("}");
+        return json.toString();
     }
 
-    public void sendErrorResponse(String message, int statusCode, String statusText) {
-        Map<String, Object> error = Map.of("reason", message);
-        sendJsonResponse(error, statusCode, statusText);
-    }
-
-    public void sendBadRequest(String message) {
-        sendErrorResponse(message, 400, "Bad Request");
-    }
-
-    public void sendMethodNotAllowed(String message) {
-        sendErrorResponse(message, 405, "Method Not Allowed");
-    }
-
-    public void sendServerError(String message) {
-        sendErrorResponse(message, 500, "Internal Server Error");
+    private String escapeJson(String str) {
+        return str.replace("\\", "\\\\").replace("\"", "\\\"").replace("\n", "\\n").replace("\r", "\\r");
     }
 
     private void writeResponse(String response) {
