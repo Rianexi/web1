@@ -1,10 +1,10 @@
 package web;
 
-public class Configuration { // кфг для всего
+public class Configuration {
     private final String fcgiPort;
     private final int historyLimit;
 
-    public Configuration() { // мб убрать если не то то то но мб подумать и забить
+    public Configuration() {
         this.fcgiPort = System.getenv().getOrDefault("FCGI_PORT", "25502");
         this.historyLimit = 1000;
     }

@@ -2,7 +2,7 @@ package web;
 
 import com.fastcgi.FCGIInterface;
 
-public class Main { // мейн и в африке мейн
+public class Main {
     public static void main(String[] args) {
         Configuration config = new Configuration();
         System.setProperty("FCGI_PORT", config.getFcgiPort());
