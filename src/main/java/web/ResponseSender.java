@@ -5,13 +5,10 @@ import java.math.BigDecimal;
 import java.util.Map;
 
 public class ResponseSender {
-    private final RequestParser parser;
     private final PointService pointService;
     private final HttpResponseSender httpSender;
 
     public ResponseSender(Configuration config) {
-        this.parser = new JsonParser();
-
         Checker checker = new Checker();
         this.httpSender = new HttpResponseSender();
         this.pointService = new PointService(checker, this.httpSender);
@@ -22,22 +19,18 @@ public class ResponseSender {
             String method = FCGIInterface.request.params.getProperty("REQUEST_METHOD");
             String requestUri = FCGIInterface.request.params.getProperty("REQUEST_URI");
 
-            if (method == null || !"POST".equalsIgnoreCase(method)) {
-                httpSender.sendMethodNotAllowed("Only POST is allowed. Received: " + method);
+            if (!"POST".equalsIgnoreCase(method)) {
+                httpSender.sendMethodNotAllowed("Only POST allowed. Received: " + method);
                 return;
             }
 
             String path = (requestUri == null ? "/calculate" : requestUri).toLowerCase();
-            if (path.equals("/calculate")) {
-                handleCalculation();
-            } else if (path.equals("/calculate/circle")) {
-                handleShape("circle");
-            } else if (path.equals("/calculate/rectangle")) {
-                handleShape("rectangle");
-            } else if (path.equals("/calculate/triangle")) {
-                handleShape("triangle");
-            } else {
-                httpSender.sendBadRequest("Unknown path: " + path);
+            switch (path) {
+                case "/calculate": handleCalculation(); break;
+                case "/calculate/circle": handleShape("circle"); break;
+                case "/calculate/rectangle": handleShape("rectangle"); break;
+                case "/calculate/triangle": handleShape("triangle"); break;
+                default: httpSender.sendBadRequest("Unknown path: " + path);
             }
         } catch (IllegalArgumentException e) {
             httpSender.sendBadRequest(e.getMessage());
@@ -52,19 +45,42 @@ public class ResponseSender {
         if (len <= 0) return "";
         byte[] buf = new byte[len];
         int read = FCGIInterface.request.inStream.read(buf, 0, len);
-        if (read <= 0) return "";
-        return new String(buf, java.nio.charset.StandardCharsets.UTF_8);
+        return read <= 0 ? "" : new String(buf, java.nio.charset.StandardCharsets.UTF_8);
+    }
+
+    private BigDecimal[] parseJson(String json) {
+        String clean = json.replaceAll("[{}\"]", "");
+        String[] parts = clean.split(",");
+
+        String x = null, y = null, r = null;
+        for (String part : parts) {
+            String[] kv = part.split(":");
+            if (kv.length == 2) {
+                String key = kv[0].trim();
+                String value = kv[1].trim();
+                switch (key) {
+                    case "x": x = value; break;
+                    case "y": y = value; break;
+                    case "r": r = value; break;
+                }
+            }
+        }
+
+        if (x == null || y == null || r == null) {
+            throw new IllegalArgumentException("Missing x, y or r");
+        }
+
+        return new BigDecimal[]{new BigDecimal(x), new BigDecimal(y), new BigDecimal(r)};
     }
 
     private void handleCalculation() throws Exception {
         long t0 = System.nanoTime();
         String body = readBody();
-        BigDecimal[] data = parser.getBigDecimals(body);
-        Map<String, Object> result = pointService.checkPoint(
-                data[0], data[1], data[2], parser.getOriginalYString()
-        );
-        long t1 = System.nanoTime();
-        double serverTotalMs = (t1 - t0) / 1_000_000.0;
+        BigDecimal[] data = parseJson(body);
+
+        Map<String, Object> result = pointService.checkPoint(data[0], data[1], data[2], data[1].toString());
+
+        double serverTotalMs = (System.nanoTime() - t0) / 1_000_000.0;
         result.put("serverTotalMs", String.format(java.util.Locale.US, "%.3f", serverTotalMs));
 
         httpSender.sendOkResponse(result);
@@ -73,13 +89,13 @@ public class ResponseSender {
     private void handleShape(String shape) throws Exception {
         long t0 = System.nanoTime();
         String body = readBody();
-        BigDecimal[] data = parser.getBigDecimals(body);
-        Map<String, Object> result = pointService.checkPointForShape(
-                data[0], data[1], data[2], shape, parser.getOriginalYString()
-        );
-        long t1 = System.nanoTime();
-        double serverTotalMs = (t1 - t0) / 1_000_000.0;
+        BigDecimal[] data = parseJson(body);
+
+        Map<String, Object> result = pointService.checkPointForShape(data[0], data[1], data[2], shape, data[1].toString());
+
+        double serverTotalMs = (System.nanoTime() - t0) / 1_000_000.0;
         result.put("serverTotalMs", String.format(java.util.Locale.US, "%.3f", serverTotalMs));
+
         httpSender.sendOkResponse(result);
     }
 }

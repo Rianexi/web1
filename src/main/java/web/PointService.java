@@ -16,12 +16,8 @@ public class PointService {
     }
 
     public Map<String, Object> checkPoint(BigDecimal x, BigDecimal y, BigDecimal r, String originalYString) {
-        long startTime = System.nanoTime();
-
         checker.validate(x, y, r);
         boolean hit = checker.isHit(x, y, r);
-
-        long endTime = System.nanoTime();
 
         Map<String, Object> result = new LinkedHashMap<>();
         result.put("x", x);
@@ -29,30 +25,18 @@ public class PointService {
         result.put("r", r);
         result.put("result", hit);
         result.put("now", dateFormat.format(new Date()));
-
         return result;
     }
 
     public Map<String, Object> checkPointForShape(BigDecimal x, BigDecimal y, BigDecimal r, String shape, String originalYString) {
-        long startTime = System.nanoTime();
-
         checker.validate(x, y, r);
         boolean hit;
         switch (shape == null ? "" : shape.toLowerCase()) {
-            case "circle":
-                hit = checker.isHitCircle(x, y, r);
-                break;
-            case "rectangle":
-                hit = checker.isHitRectangle(x, y, r);
-                break;
-            case "triangle":
-                hit = checker.isHitTriangle(x, y, r);
-                break;
-            default:
-                throw new IllegalArgumentException("Unknown shape: " + shape);
+            case "circle": hit = checker.isHitCircle(x, y, r); break;
+            case "rectangle": hit = checker.isHitRectangle(x, y, r); break;
+            case "triangle": hit = checker.isHitTriangle(x, y, r); break;
+            default: throw new IllegalArgumentException("Unknown shape: " + shape);
         }
-
-        long endTime = System.nanoTime();
 
         Map<String, Object> result = new LinkedHashMap<>();
         result.put("x", x);
@@ -61,7 +45,6 @@ public class PointService {
         result.put("result", hit);
         result.put("shape", shape);
         result.put("now", dateFormat.format(new Date()));
-
         return result;
     }
 }

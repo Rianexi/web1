@@ -17,18 +17,6 @@
     --transition: all 0.3s ease;
 }
 
-[data-theme="light"] {
-    --bg-primary: #f8fafc;
-    --bg-card: #ffffff;
-    --bg-hover: #f1f5f9;
-    --border: #e2e8f0;
-    --text-primary: #1e293b;
-    --text-secondary: #475569;
-    --accent: #3b82f6;
-    --success: #10b981;
-    --error: #ef4444;
-}
-
 body {
     font-family: Arial, sans-serif;
     background: var(--bg-primary);
@@ -46,7 +34,6 @@ body {
 .header {
     text-align: center;
     margin-bottom: 2rem;
-    position: relative;
 }
 
 .header h1 {
@@ -54,25 +41,6 @@ body {
     font-size: 2.5rem;
     color: #5c6bc0;
     margin-bottom: 1rem;
-}
-
-.theme-toggle {
-    position: absolute;
-    top: 0;
-    right: 0;
-    width: 40px;
-    height: 40px;
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    background: var(--bg-card);
-    cursor: pointer;
-    font-size: 1.2rem;
-    transition: var(--transition);
-}
-
-.theme-toggle:hover {
-    background: var(--bg-hover);
-    transform: scale(1.05);
 }
 
 .student-info {
@@ -153,6 +121,7 @@ body {
     background: var(--bg-card);
     color: var(--text-primary);
     font-size: 1rem;
+    max-width: 250px;
 }
 
 .error {
@@ -167,6 +136,10 @@ body {
     border-radius: 6px;
     margin-bottom: 20px;
     font-family: monospace;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    cursor: help;
 }
 
 .submit-btn {
@@ -239,6 +212,25 @@ body {
 .result-row.miss {
     background: rgba(255, 71, 87, 0.1);
     border-color: var(--error);
+}
+
+.result-row div {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 140px;
+    cursor: help;
+    display: inline-block;
+}
+
+.result-row input[type="checkbox"] {
+    max-width: none;
+    cursor: pointer;
+}
+
+.result-row div:nth-child(5) {
+    max-width: none;
+    cursor: default;
 }
 
 @media (max-width: 768px) {
